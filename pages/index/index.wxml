@@ -1,0 +1,90 @@
+<!--index.wxml-->
+<scroll-view class="scrollarea" scroll-y type="list">
+  <view class="container">
+    <!-- 顶部Tab切换 -->
+    <view class="tabs-container">
+      <view 
+        wx:for="{{tabs}}" 
+        wx:key="id" 
+        class="tab {{currentTab === item.id ? 'active' : ''}}"
+        data-id="{{item.id}}"
+        bindtap="switchTab"
+      >
+        {{item.name}}
+      </view>
+    </view>
+
+    <!-- 活动列表 -->
+    <view class="activities-container">
+      <block wx:if="{{!loading && activities.length > 0}}">
+        <view 
+          wx:for="{{activities}}" 
+          wx:key="id" 
+          class="activity-card"
+          data-id="{{item.id}}"
+          bindtap="navigateToDetail"
+        >
+          <!-- 活动封面 -->
+          <image 
+            class="activity-cover" 
+            src="{{item.coverImage}}" 
+            mode="aspectFill"
+          ></image>
+          
+          <!-- 活动信息 -->
+          <view class="activity-info">
+            <view class="activity-title">{{item.title}}</view>
+            <view class="activity-desc">{{item.description}}</view>
+            
+            <view class="activity-meta">
+              <view class="activity-location">
+                <text class="iconfont icon-location"></text>
+                <text>{{item.location}}</text>
+              </view>
+              
+              <view class="activity-distance">
+                <text class="iconfont icon-distance"></text>
+                <text>距离 {{item.distanceText}}</text>
+              </view>
+            </view>
+            
+            <view class="activity-bottom">
+              <view class="activity-creator">
+                <image class="avatar" src="{{item.creator.avatar}}"></image>
+                <text>{{item.creator.nickname}}</text>
+              </view>
+              
+              <view class="activity-participants">
+                <text class="participants-count">{{item.participants.length}}人参与</text>
+                <view class="avatar-group">
+                  <image 
+                    wx:for="{{item.participants}}" 
+                    wx:key="id" 
+                    wx:for-item="participant"
+                    wx:if="{{index < 3}}"
+                    class="avatar-small" 
+                    src="{{participant.avatar}}"
+                  ></image>
+                  <view wx:if="{{item.participants.length > 3}}" class="avatar-more">+{{item.participants.length - 3}}</view>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </block>
+      
+      <!-- 加载中状态 -->
+      <view wx:if="{{loading}}" class="loading-container">
+        <view class="loading-icon"></view>
+        <text>加载中...</text>
+      </view>
+      
+      <!-- 空状态 -->
+      <view wx:if="{{!loading && activities.length === 0}}" class="empty-container">
+        <view class="empty-icon"></view>
+        <text>暂无活动，快去创建一个吧！</text>
+        <button class="btn-create" bindtap="navigateToPublish">创建活动</button>
+      </view>
+    </view>
+  </view>
+</scroll-view>

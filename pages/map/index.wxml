@@ -1,0 +1,38 @@
+<view class="container">
+  <!-- 加载中状态 -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <view class="loading-icon"></view>
+    <text>加载中...</text>
+  </view>
+
+  <!-- 地图 -->
+  <view wx:if="{{!loading}}" class="map-container">
+    <map
+      id="map"
+      class="map"
+      longitude="{{userLocation.longitude || markers[0].longitude}}"
+      latitude="{{userLocation.latitude || markers[0].latitude}}"
+      scale="{{scale}}"
+      markers="{{markers}}"
+      polyline="{{polyline}}"
+      show-location="true"
+      bindmarkertap="markerTap"
+      bindlabeltap="markerTap"
+      bindcallouttap="markerTap"
+      bindload="mapLoaded"
+    ></map>
+
+    <!-- 地图控制按钮 -->
+    <view class="map-controls">
+      <view class="control-btn" bindtap="moveToLocation">
+        <view class="control-icon location-icon">📍</view>
+      </view>
+      <view class="control-btn" bindtap="refreshLocation">
+        <view class="control-icon refresh-icon">🔄</view>
+      </view>
+      <view class="control-btn" bindtap="includeAllMarkers">
+        <view class="control-icon fit-icon">📌</view>
+      </view>
+    </view>
+  </view>
+</view> 

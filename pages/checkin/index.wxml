@@ -1,0 +1,102 @@
+<view class="container">
+  <!-- 加载中状态 -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <view class="loading-icon"></view>
+    <text>加载中...</text>
+  </view>
+
+  <!-- 打卡内容 -->
+  <block wx:if="{{!loading && activity}}">
+    <!-- 活动标题 -->
+    <view class="activity-header">
+      <view class="activity-title">{{activity.title}}</view>
+    </view>
+
+    <!-- 位置信息 -->
+    <view class="location-card">
+      <view class="location-header">
+        <view class="location-title">当前位置</view>
+        <view class="refresh-btn" bindtap="refreshLocation">刷新位置</view>
+      </view>
+      
+      <view class="location-content">
+        <view wx:if="{{userLocation}}" class="location-info">
+          <view class="location-coords">
+            <text class="coords-label">经纬度:</text>
+            <text class="coords-value">{{userLocation.latitude}}, {{userLocation.longitude}}</text>
+          </view>
+          
+          <view wx:if="{{nearestCheckpoint}}" class="nearest-checkpoint">
+            <view class="checkpoint-name">最近打卡点: {{nearestCheckpoint.name}}</view>
+            <view class="checkpoint-distance {{inRange ? 'in-range' : 'out-range'}}">
+              距离: {{distanceText}}
+              <text wx:if="{{inRange}}" class="status in-range">(可打卡)</text>
+              <text wx:else class="status out-range">(不可打卡)</text>
+            </view>
+          </view>
+        </view>
+        
+        <view wx:else class="no-location">
+          <text>未获取到位置信息</text>
+          <button class="btn-get-location" bindtap="getUserLocation">获取位置</button>
+        </view>
+      </view>
+    </view>
+
+    <!-- 打卡表单 -->
+    <view class="checkin-form">
+      <view class="form-title">打卡内容</view>
+      
+      <!-- 打卡文字 -->
+      <view class="form-item">
+        <textarea 
+          class="checkin-text" 
+          placeholder="记录此刻的心情..." 
+          maxlength="200"
+          bindinput="onInputText"
+        ></textarea>
+        <view class="text-counter">{{text.length}}/200</view>
+      </view>
+      
+      <!-- 打卡图片 -->
+      <view class="form-item">
+        <view class="image-list">
+          <view 
+            wx:for="{{images}}" 
+            wx:key="*this" 
+            class="image-item"
+          >
+            <image 
+              class="uploaded-image" 
+              src="{{item}}" 
+              mode="aspectFill"
+              data-src="{{item}}"
+              bindtap="previewImage"
+            ></image>
+            <view 
+              class="delete-btn" 
+              data-index="{{index}}"
+              catchtap="deleteImage"
+            >×</view>
+          </view>
+          
+          <view wx:if="{{images.length < 9}}" class="image-picker" bindtap="chooseImage">
+            <view class="picker-icon">+</view>
+            <view class="picker-text">添加图片</view>
+          </view>
+        </view>
+        <view class="image-tip">最多9张图片</view>
+      </view>
+    </view>
+
+    <!-- 提交按钮 -->
+    <view class="btn-container">
+      <button 
+        class="btn-submit {{(!inRange || submitting) ? 'disabled' : ''}}"
+        disabled="{{!inRange || submitting}}"
+        loading="{{submitting}}"
+        bindtap="submitCheckin"
+      >{{submitting ? '提交中...' : '提交打卡'}}</button>
+    </view>
+  </block>
+</view> 

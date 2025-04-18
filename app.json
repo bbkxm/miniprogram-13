@@ -1,0 +1,79 @@
+{
+  "pages": ["pages/index/index", "pages/publishActivity/index", "pages/map/index", "pages/profile/index"],
+  "usingComponents": {
+    "t-toast": "tdesign-miniprogram/toast/toast"
+  },
+  "subpackages": [
+    {
+      "root": "pages/activity",
+      "name": "activity",
+      "pages": ["index"]
+    },
+    {
+      "root": "pages/my/info-edit",
+      "name": "edit",
+      "pages": ["index"]
+    },
+    {
+      "root": "pages/chat",
+      "name": "chat",
+      "pages": ["index"]
+    },
+    {
+      "root": "pages/login",
+      "name": "login",
+      "pages": ["login"]
+    },
+    {
+      "root": "pages/loginCode",
+      "name": "loginCode",
+      "pages": ["loginCode"]
+    },
+    {
+      "root": "pages/dataCenter",
+      "name": "dataCenter",
+      "pages": ["index"]
+    },
+    {
+      "root": "pages/setting",
+      "name": "setting",
+      "pages": ["index"]
+    },
+    {
+      "root": "pages/release",
+      "name": "release",
+      "pages": ["index"]
+    }
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#fff",
+    "navigationBarTitleText": "Weixin",
+    "navigationBarTextStyle": "black"
+  },
+  "tabBar": {
+    "custom": true,
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "活动广场"
+      },
+      {
+        "pagePath": "pages/publishActivity/index",
+        "text": "发布活动"
+      },
+      {
+        "pagePath": "pages/map/index",
+        "text": "打卡地图"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的"
+      }
+    ]
+  },
+  "resolveAlias": {
+    "~/*": "/*"
+  },
+  "sitemapLocation": "sitemap.json"
+}

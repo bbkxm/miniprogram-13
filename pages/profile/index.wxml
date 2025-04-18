@@ -1,0 +1,123 @@
+<view class="container">
+  <!-- 用户信息 -->
+  <view class="user-info-card">
+    <view class="user-avatar-container" bindtap="editUserInfo">
+      <image class="user-avatar" src="{{userInfo.avatar}}" mode="aspectFill"></image>
+      <view class="edit-badge">
+        <text class="edit-icon">✏️</text>
+      </view>
+    </view>
+    <view class="user-details">
+      <view class="user-nickname">{{userInfo.nickname}}</view>
+      <view class="user-id">ID: {{userInfo.id}}</view>
+    </view>
+  </view>
+
+  <!-- 活动标签页 -->
+  <view class="activities-container">
+    <!-- 顶部Tab切换 -->
+    <view class="tabs-container">
+      <view 
+        wx:for="{{tabs}}" 
+        wx:key="id" 
+        class="tab {{currentTab === item.id ? 'active' : ''}}"
+        data-id="{{item.id}}"
+        bindtap="switchTab"
+      >
+        {{item.name}}
+      </view>
+    </view>
+
+    <!-- 已加入的活动 -->
+    <view wx:if="{{currentTab === 'joined'}}" class="tab-content">
+      <!-- 加载中状态 -->
+      <view wx:if="{{loading}}" class="loading-container">
+        <view class="loading-icon"></view>
+        <text>加载中...</text>
+      </view>
+      
+      <!-- 活动列表 -->
+      <block wx:if="{{!loading && activities.joined && activities.joined.length > 0}}">
+        <view 
+          wx:for="{{activities.joined}}" 
+          wx:key="id" 
+          class="activity-card"
+          data-id="{{item.id}}"
+          bindtap="navigateToDetail"
+        >
+          <image 
+            class="activity-cover" 
+            src="{{item.coverImage}}" 
+            mode="aspectFill"
+          ></image>
+          <view class="activity-info">
+            <view class="activity-title">{{item.title}}</view>
+            <view class="activity-meta">
+              <view class="activity-creator">
+                <image class="creator-avatar" src="{{item.creator.avatar}}"></image>
+                <text>{{item.creator.nickname}}</text>
+              </view>
+              <view class="activity-participants">{{item.participants.length}}人参与</view>
+            </view>
+          </view>
+        </view>
+      </block>
+      
+      <!-- 空状态 -->
+      <view wx:if="{{!loading && (!activities.joined || activities.joined.length === 0)}}" class="empty-container">
+        <view class="empty-icon"></view>
+        <text>暂未加入任何活动</text>
+        <button class="btn-create" bindtap="navigateToPublish">去浏览活动</button>
+      </view>
+    </view>
+
+    <!-- 已创建的活动 -->
+    <view wx:if="{{currentTab === 'created'}}" class="tab-content">
+      <!-- 加载中状态 -->
+      <view wx:if="{{loading}}" class="loading-container">
+        <view class="loading-icon"></view>
+        <text>加载中...</text>
+      </view>
+      
+      <!-- 活动列表 -->
+      <block wx:if="{{!loading && activities.created && activities.created.length > 0}}">
+        <view 
+          wx:for="{{activities.created}}" 
+          wx:key="id" 
+          class="activity-card"
+          data-id="{{item.id}}"
+          bindtap="navigateToDetail"
+        >
+          <image 
+            class="activity-cover" 
+            src="{{item.coverImage}}" 
+            mode="aspectFill"
+          ></image>
+          <view class="activity-info">
+            <view class="activity-title">{{item.title}}</view>
+            <view class="activity-meta">
+              <view class="activity-time">
+                <text class="time-icon">🕒</text>
+                <text>{{item.startTime}}</text>
+              </view>
+              <view class="activity-participants">{{item.participants.length}}人参与</view>
+            </view>
+          </view>
+        </view>
+      </block>
+      
+      <!-- 空状态 -->
+      <view wx:if="{{!loading && (!activities.created || activities.created.length === 0)}}" class="empty-container">
+        <view class="empty-icon"></view>
+        <text>暂未创建任何活动</text>
+        <button class="btn-create" bindtap="navigateToPublish">创建活动</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部操作区 -->
+  <view class="footer-actions">
+    <button class="btn-setting" bindtap="editUserInfo">编辑资料</button>
+    <button class="btn-logout" bindtap="logout">退出登录</button>
+  </view>
+</view> 

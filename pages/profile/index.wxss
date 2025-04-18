@@ -1,0 +1,237 @@
+/* 页面容器 */
+.container {
+  padding: 0;
+  box-sizing: border-box;
+  padding-bottom: 120rpx; /* 为底部操作区留出空间 */
+}
+
+/* 用户信息卡片 */
+.user-info-card {
+  background-color: #4285f4;
+  color: #fff;
+  padding: 40rpx 32rpx;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.user-avatar-container {
+  position: relative;
+  margin-right: 24rpx;
+}
+
+.user-avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  border: 4rpx solid rgba(255, 255, 255, 0.4);
+}
+
+.edit-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 40rpx;
+  height: 40rpx;
+  background-color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-icon {
+  font-size: 24rpx;
+}
+
+.user-details {
+  flex: 1;
+}
+
+.user-nickname {
+  font-size: 36rpx;
+  font-weight: 500;
+  margin-bottom: 12rpx;
+}
+
+.user-id {
+  font-size: 24rpx;
+  opacity: 0.8;
+}
+
+/* 活动容器 */
+.activities-container {
+  background-color: #fff;
+}
+
+/* Tab切换 */
+.tabs-container {
+  display: flex;
+  background-color: #fff;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 24rpx 0;
+  font-size: 30rpx;
+  color: #666;
+  position: relative;
+}
+
+.tab.active {
+  color: #4285f4;
+  font-weight: 500;
+}
+
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60rpx;
+  height: 6rpx;
+  background-color: #4285f4;
+  border-radius: 3rpx;
+}
+
+/* Tab内容 */
+.tab-content {
+  padding: 24rpx;
+}
+
+/* 加载中 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60rpx 0;
+  color: #999;
+}
+
+.loading-icon {
+  width: 60rpx;
+  height: 60rpx;
+  border: 4rpx solid #f3f3f3;
+  border-top: 4rpx solid #4285f4;
+  border-radius: 50%;
+  margin-bottom: 20rpx;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 活动卡片 */
+.activity-card {
+  background-color: #fff;
+  border-radius: 12rpx;
+  overflow: hidden;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.activity-cover {
+  width: 100%;
+  height: 240rpx;
+}
+
+.activity-info {
+  padding: 20rpx;
+}
+
+.activity-title {
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+
+.activity-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 24rpx;
+  color: #999;
+}
+
+.activity-creator, .activity-time {
+  display: flex;
+  align-items: center;
+}
+
+.creator-avatar {
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 50%;
+  margin-right: 8rpx;
+}
+
+.time-icon {
+  margin-right: 8rpx;
+}
+
+/* 空状态 */
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80rpx 0;
+  color: #999;
+}
+
+.empty-icon {
+  width: 160rpx;
+  height: 160rpx;
+  background-color: #f7f7f7;
+  border-radius: 50%;
+  margin-bottom: 40rpx;
+}
+
+.btn-create {
+  margin-top: 40rpx;
+  background-color: #4285f4;
+  color: #fff;
+  font-size: 28rpx;
+  padding: 16rpx 60rpx;
+  border-radius: 100rpx;
+}
+
+/* 底部操作区 */
+.footer-actions {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+  margin-top: 10px;
+}
+
+.btn-setting, .btn-map, .btn-logout {
+  flex: 1;
+  margin: 0 6px;
+  height: 44px;
+  line-height: 44px;
+  text-align: center;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.btn-setting {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.btn-map {
+  background-color: #4285f4;
+  color: white;
+}
+
+.btn-logout {
+  background-color: #f44336;
+  color: white;
+} 

@@ -1,0 +1,204 @@
+<view class="container">
+  <!-- 加载中状态 -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <view class="loading-icon"></view>
+    <text>加载中...</text>
+  </view>
+
+  <!-- 活动详情内容 -->
+  <block wx:if="{{!loading && activity}}">
+    <!-- 活动封面 -->
+    <view class="cover-container">
+      <image class="cover-image" src="{{activity.coverImage}}" mode="aspectFill"></image>
+      <view class="cover-mask"></view>
+      <view class="activity-title">{{activity.title}}</view>
+    </view>
+
+    <!-- 顶部Tab切换 -->
+    <view class="tabs-container">
+      <view 
+        wx:for="{{tabs}}" 
+        wx:key="id" 
+        class="tab {{currentTab === item.id ? 'active' : ''}}"
+        data-id="{{item.id}}"
+        bindtap="switchTab"
+      >
+        {{item.name}}
+      </view>
+    </view>
+
+    <!-- 活动信息Tab -->
+    <view wx:if="{{currentTab === 'info'}}" class="info-container">
+      <!-- 基本信息 -->
+      <view class="info-card">
+        <view class="info-section">
+          <view class="section-title">活动时间</view>
+          <view class="section-content">{{activity.startTime}} - {{activity.endTime}}</view>
+        </view>
+        
+        <view class="info-section">
+          <view class="section-title">活动地点</view>
+          <view class="section-content">{{activity.location}}</view>
+        </view>
+        
+        <view class="info-section">
+          <view class="section-title">活动详情</view>
+          <view class="section-content">{{activity.description}}</view>
+        </view>
+      </view>
+      
+      <!-- 打卡点信息 -->
+      <view class="info-card">
+        <view class="card-header">
+          <view class="card-title">打卡点</view>
+          <view class="view-map" hover-class="view-map-hover" bindtap="viewMap">查看地图</view>
+        </view>
+        
+        <view class="checkpoint-list">
+          <view 
+            wx:for="{{activity.checkpoints}}" 
+            wx:key="id" 
+            class="checkpoint-item"
+          >
+            <view class="checkpoint-index">{{index + 1}}</view>
+            <view class="checkpoint-info">
+              <view class="checkpoint-name">{{item.name}}</view>
+              <view class="checkpoint-coordinates">
+                {{item.coordinates.latitude}}, {{item.coordinates.longitude}}
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 参与者信息 -->
+      <view class="info-card">
+        <view class="card-header">
+          <view class="card-title">参与者 ({{activity.participants.length}})</view>
+        </view>
+        
+        <view class="participants-list">
+          <view 
+            wx:for="{{activity.participants}}" 
+            wx:key="id" 
+            class="participant-item"
+          >
+            <image class="participant-avatar" src="{{item.avatar}}"></image>
+            <view class="participant-name">{{item.nickname}}</view>
+            <view wx:if="{{item.id === activity.creator.id}}" class="creator-badge">创建者</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 打卡记录Tab -->
+    <view wx:if="{{currentTab === 'checkins'}}" class="checkins-container">
+      <!-- 筛选信息 -->
+      <view wx:if="{{selectedCheckpointId}}" class="filter-info">
+        <text>已筛选打卡点: {{checkpointName}}</text>
+        <text class="clear-filter" bindtap="clearCheckpointFilter">清除筛选</text>
+      </view>
+      
+      <block wx:if="{{filteredCheckins.length > 0}}">
+        <view 
+          wx:for="{{filteredCheckins}}" 
+          wx:key="id" 
+          class="checkin-card"
+        >
+          <view class="checkin-header">
+            <image class="checkin-avatar" src="/images/avatar{{item.userId}}.jpg"></image>
+            <view class="checkin-user-info">
+              <view class="checkin-nickname">用户{{item.userId}}</view>
+              <view class="checkin-time">{{item.formattedTime}}</view>
+            </view>
+          </view>
+          
+          <view class="checkin-content">
+            <view class="checkin-text">{{item.text}}</view>
+            
+            <view wx:if="{{item.images && item.images.length > 0}}" class="checkin-images">
+              <image 
+                wx:for="{{item.images}}" 
+                wx:for-item="image" 
+                wx:key="*this"
+                class="checkin-image" 
+                src="{{image}}"
+                mode="aspectFill"
+                data-src="{{image}}"
+                data-urls="{{item.images}}"
+                bindtap="previewImage"
+              ></image>
+            </view>
+            
+            <view class="checkin-location">
+              <text class="iconfont icon-location"></text>
+              <text>打卡点: {{activity.checkpoints[item.checkpointId - 1].name}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
+      
+      <view wx:else class="empty-checkins">
+        <view class="empty-icon"></view>
+        <text>暂无打卡记录</text>
+      </view>
+    </view>
+    
+    <!-- 地图Tab -->
+    <view wx:if="{{currentTab === 'map'}}" class="map-container">
+      <map
+        id="activityMap"
+        class="activity-map"
+        latitude="{{mapMarkers.length > 0 ? mapMarkers[0].latitude : (userLocation ? userLocation.latitude : 39.9)}}"
+        longitude="{{mapMarkers.length > 0 ? mapMarkers[0].longitude : (userLocation ? userLocation.longitude : 116.3)}}"
+        scale="{{14}}"
+        markers="{{mapMarkers}}"
+        polyline="{{mapPolyline}}"
+        show-location="true"
+        bindmarkertap="onMarkerTap"
+        bindlabeltap="onMarkerTap"
+        bindcallouttap="onMarkerTap"
+        bindload="onMapLoad"
+      ></map>
+      
+      <!-- 地图控制按钮 -->
+      <view class="map-controls">
+        <view class="control-btn" bindtap="moveToLocation">
+          <view class="control-icon location-icon">📍</view>
+        </view>
+        <view class="control-btn" bindtap="refreshLocation">
+          <view class="control-icon refresh-icon">🔄</view>
+        </view>
+        <view class="control-btn" bindtap="includeAllMarkers">
+          <view class="control-icon fit-icon">📌</view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 底部操作栏 -->
+    <view class="action-bar">
+      <button 
+        wx:if="{{!hasJoined && !isCreator}}" 
+        class="btn-join" 
+        bindtap="joinActivity"
+      >加入活动</button>
+      
+      <button 
+        wx:if="{{hasJoined && !isCreator}}" 
+        class="btn-quit" 
+        bindtap="quitActivity"
+      >退出活动</button>
+      
+      <button 
+        wx:if="{{hasJoined || isCreator}}" 
+        class="btn-checkin" 
+        bindtap="goToCheckin"
+      >去打卡</button>
+      
+      <button 
+        open-type="share" 
+        class="btn-share"
+      >分享活动</button>
+    </view>
+  </block>
+</view> 

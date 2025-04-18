@@ -1,0 +1,6 @@
+<t-tab-bar value="{{ value }}" theme="tag" split="{{ false }}" bind:change="handleChange">
+  <t-tab-bar-item icon="home" value="index">活动广场</t-tab-bar-item>
+  <t-tab-bar-item icon="add" value="publishActivity">发布活动</t-tab-bar-item>
+  <t-tab-bar-item icon="map" value="map">打卡地图</t-tab-bar-item>
+  <t-tab-bar-item icon="user" value="profile">我的</t-tab-bar-item>
+</t-tab-bar>
