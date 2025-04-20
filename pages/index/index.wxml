@@ -87,4 +87,11 @@
       </view>
     </view>
   </view>
+  
+  <!-- 悬浮的发布活动按钮 -->
+  <view wx:if="{{!loading && activities.length != 0}}" class="fab-container">
+    <view class="fab-button" bindtap="navigateToPublish">
+      <text>+</text>
+    </view>
+  </view>
 </scroll-view>

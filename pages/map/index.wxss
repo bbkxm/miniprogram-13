@@ -54,11 +54,11 @@
 /* 地图控制按钮 */
 .map-controls {
   position: absolute;
-  bottom: 40rpx;
+  bottom: 240rpx; /* 进一步增加底部距离，确保按钮完全可见 */
   right: 40rpx;
   display: flex;
   flex-direction: column;
-  z-index: 5;
+  z-index: 100;
 }
 
 .control-btn {
@@ -69,8 +69,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
+  margin-bottom: 30rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
 }
 
 .control-btn:last-child {

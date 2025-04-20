@@ -11,11 +11,6 @@ Component({
         label: '活动广场',
       },
       {
-        icon: 'add',
-        value: 'publishActivity',
-        label: '发布活动',
-      },
-      {
         icon: 'location',
         value: 'map',
         label: '打卡地图',

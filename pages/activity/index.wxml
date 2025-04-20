@@ -48,7 +48,7 @@
       </view>
       
       <!-- 打卡点信息 -->
-      <view class="info-card">
+      <!-- <view class="info-card">
         <view class="card-header">
           <view class="card-title">打卡点</view>
           <view class="view-map" hover-class="view-map-hover" bindtap="viewMap">查看地图</view>
@@ -69,7 +69,7 @@
             </view>
           </view>
         </view>
-      </view>
+      </view> -->
       
       <!-- 参与者信息 -->
       <view class="info-card">
@@ -194,11 +194,7 @@
         class="btn-checkin" 
         bindtap="goToCheckin"
       >去打卡</button>
-      
-      <button 
-        open-type="share" 
-        class="btn-share"
-      >分享活动</button>
+
     </view>
   </block>
 </view> 

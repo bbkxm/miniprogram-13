@@ -10,39 +10,9 @@
       "pages": ["index"]
     },
     {
-      "root": "pages/my/info-edit",
-      "name": "edit",
-      "pages": ["index"]
-    },
-    {
-      "root": "pages/chat",
-      "name": "chat",
-      "pages": ["index"]
-    },
-    {
-      "root": "pages/login",
-      "name": "login",
-      "pages": ["login"]
-    },
-    {
-      "root": "pages/loginCode",
-      "name": "loginCode",
-      "pages": ["loginCode"]
-    },
-    {
-      "root": "pages/dataCenter",
-      "name": "dataCenter",
-      "pages": ["index"]
-    },
-    {
-      "root": "pages/setting",
-      "name": "setting",
-      "pages": ["index"]
-    },
-    {
-      "root": "pages/release",
-      "name": "release",
-      "pages": ["index"]
+        "root": "pages/checkin",
+        "name": "checkin",
+        "pages": ["index"]
     }
   ],
   "window": {
@@ -57,10 +27,6 @@
       {
         "pagePath": "pages/index/index",
         "text": "活动广场"
-      },
-      {
-        "pagePath": "pages/publishActivity/index",
-        "text": "发布活动"
       },
       {
         "pagePath": "pages/map/index",

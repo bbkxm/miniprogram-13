@@ -67,7 +67,7 @@
       <view wx:if="{{!loading && (!activities.joined || activities.joined.length === 0)}}" class="empty-container">
         <view class="empty-icon"></view>
         <text>暂未加入任何活动</text>
-        <button class="btn-create" bindtap="navigateToPublish">去浏览活动</button>
+        <button class="btn-create" bindtap="navigateToIndex">去浏览活动</button>
       </view>
     </view>
 

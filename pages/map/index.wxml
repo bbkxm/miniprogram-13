@@ -10,8 +10,8 @@
     <map
       id="map"
       class="map"
-      longitude="{{userLocation.longitude || markers[0].longitude}}"
-      latitude="{{userLocation.latitude || markers[0].latitude}}"
+      longitude="{{userLocation.longitude || (markers.length > 0 ? markers[0].longitude : 116.4074)}}"
+      latitude="{{userLocation.latitude || (markers.length > 0 ? markers[0].latitude : 39.9042)}}"
       scale="{{scale}}"
       markers="{{markers}}"
       polyline="{{polyline}}"

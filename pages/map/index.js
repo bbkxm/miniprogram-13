@@ -146,34 +146,39 @@ Page({
 
   // 加载所有活动数据
   loadAllActivities: function() {
-    this.setData({ loading: true })
-    
     api.getActivities()
       .then(res => {
-        if (res && res.data && Array.isArray(res.data)) {
-          // 设置活动数据
+        if (res && res.data) {
+          // 更新活动数据
           this.setData({ 
             activities: res.data,
-            loading: false 
+            loading: false
           })
           
-          // 初始化所有活动的地图标记点
+          // 初始化地图标记
           this.initAllActivitiesMarkers()
+          
+          // 添加用户位置标记
+          if (this.data.userLocation) {
+            this.addUserLocationMarker()
+          }
         } else {
+          // 即使没有活动数据，也设置loading为false以显示地图
           this.setData({ loading: false })
-          wx.showToast({
-            title: '无活动数据',
-            icon: 'none'
-          })
+          
+          // 添加用户位置标记
+          if (this.data.userLocation) {
+            this.addUserLocationMarker()
+          }
         }
       })
       .catch(err => {
-        console.error('获取活动数据失败', err)
-        this.setData({ loading: false })
+        console.error('获取活动列表失败', err)
         wx.showToast({
-          title: '获取活动数据失败',
+          title: '获取活动失败',
           icon: 'none'
         })
+        this.setData({ loading: false })
       })
   },
 
@@ -398,16 +403,27 @@ Page({
 
   // 视野包含所有标记点
   includeAllMarkers: function() {
-    const { markers } = this.data
-    if (markers.length === 0) return
+    if (!this.mapCtx || !this.data.markers || this.data.markers.length === 0) {
+      // 如果没有标记点，则直接返回或移动到用户位置
+      if (this.data.userLocation && this.mapCtx) {
+        this.moveToLocation()
+      }
+      return
+    }
+    
+    // 使用 includePoints 方法使视野包含所有标记点
+    const points = this.data.markers.map(marker => ({
+      latitude: marker.latitude,
+      longitude: marker.longitude
+    }))
+    
+    // 添加用户位置（如果存在）
+    if (this.data.userLocation) {
+      points.push(this.data.userLocation)
+    }
     
     this.mapCtx.includePoints({
-      points: markers.map(marker => {
-        return {
-          latitude: marker.latitude,
-          longitude: marker.longitude
-        }
-      }),
+      points: points,
       padding: [80, 80, 80, 80]
     })
   },
@@ -576,7 +592,13 @@ Page({
     
     // 延迟一下，确保地图已准备好
     setTimeout(() => {
-      this.includeAllMarkers()
+      // 只有在有标记点的情况下才执行includeAllMarkers
+      if (this.data.markers && this.data.markers.length > 0) {
+        this.includeAllMarkers()
+      } else if (this.data.userLocation) {
+        // 如果没有标记点但有用户位置，则移动到用户位置
+        this.moveToLocation()
+      }
     }, 500)
   }
 }) 

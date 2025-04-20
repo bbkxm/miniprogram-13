@@ -1,5 +1,12 @@
-<view class="container">
-		<view class="form-content">
+<view class="page">
+  <!-- 加载中状态 -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <view class="loading-icon"></view>
+    <text>加载中...</text>
+  </view>
+
+
+	<view class="form-content">
 			<view class="form-group">
 				<view class="form-label">活动标题
 					<text class="required">*</text>
@@ -90,47 +97,16 @@
 				 bindinput="onInputDescription"
 				/>
 			</view>
-		</view>
-
-    <!-- 底部操作栏 -->
-    <view class="action-bar">
-      <button 
-        wx:if="{{!hasJoined && !isCreator}}" 
-        class="btn-join" 
-        bindtap="joinActivity"
-      >加入活动</button>
-      
-      <button 
-        wx:if="{{hasJoined && !isCreator}}" 
-        class="btn-quit" 
-        bindtap="quitActivity"
-      >退出活动</button>
-      
-      <button 
-        wx:if="{{hasJoined || isCreator}}" 
-        class="btn-checkin" 
-        bindtap="goToCheckin"
-      >去打卡</button>
-      
-      <button 
-        open-type="share" 
-        class="btn-share"
-      >分享活动</button>
-    </view>
-
-		<!-- 日期时间选择器 -->
-		<view wx:if="{{showDatePicker}}" class="picker-modal">
-			<view class="picker-mask" catchtap="onDatePickerCancel" />
-			<view class="picker-content">
-				<view class="picker-header">
-					<view class="picker-cancel" bindtap="onDatePickerCancel">取消</view>
-					<view class="picker-title">选择时间</view>
-					<view class="picker-confirm" bindtap="onDatePickerConfirm">确定</view>
-				</view>
-				<picker-view class="picker-view" value="{{pickerValue}}" bindchange="onDatePickerChange">
-					<!-- 日期选择器内容，实际开发中需要结合具体需求实现 -->
-					<text class="picker-placeholder">选择日期时间组件需要具体实现</text>
-				</picker-view>
-			</view>
-		</view>
 	</view>
+
+	<!-- 底部操作栏 -->
+	<view class="action-bar safe-area-bottom">
+		<button class="btn-cancel" bindtap="resetForm">取消</button>
+		<button 
+		class="btn-publish" 
+		bindtap="submitForm"
+		loading="{{submitting}}"
+		>发布活动</button>
+	</view>
+</view>
+

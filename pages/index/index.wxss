@@ -236,10 +236,10 @@ page {
 /* 悬浮按钮 */
 .fab-button {
   position: fixed;
-  bottom: 120rpx;
+  bottom: 180rpx; /* 增加底部间距，使按钮不被底部导航栏遮挡 */
   right: 40rpx;
-  width: 100rpx;
-  height: 100rpx;
+  width: 110rpx;
+  height: 110rpx;
   border-radius: 50%;
   background-color: #4285f4;
   color: #fff;
@@ -247,7 +247,7 @@ page {
   align-items: center;
   justify-content: center;
   box-shadow: 0 6rpx 16rpx rgba(66, 133, 244, 0.3);
-  z-index: 99;
+  z-index: 999; /* 增加z-index确保在最上层 */
 }
 
 .fab-button text {

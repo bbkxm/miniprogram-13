@@ -239,7 +239,7 @@ Page({
   // 前往打卡
   goToCheckin: function() {
     wx.navigateTo({
-      url: `/pages/checkin/checkin?activityId=${this.data.id}`
+      url: `/pages/checkin/index?activityId=${this.data.id}`
     })
   },
 

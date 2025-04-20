@@ -88,14 +88,21 @@ Page({
   navigateToDetail: function(e) {
     const activityId = e.currentTarget.dataset.id
     wx.navigateTo({
-      url: '/pages/activityDetail/activityDetail?id=' + activityId
+      url: '/pages/activity/index?id=' + activityId
     })
   },
 
   // 跳转到发布活动页面
   navigateToPublish: function() {
     wx.navigateTo({
-      url: '/pages/publishActivity/publishActivity'
+      url: '/pages/publishActivity/index'
+    })
+  },
+
+  // 跳转到活动广场页面
+  navigateToIndex: function() {
+    wx.switchTab({
+      url: '/pages/index/index'
     })
   },
 

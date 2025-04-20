@@ -17,11 +17,11 @@ Page({
     canIUseNicknameComp: wx.canIUse('input.type.nickname'),
     activities: [],
     loading: true,
-    currentTab: 'hot', // hot: 热门, nearby: 附近
+    currentTab: 'hot', // hot: 热门, new: 最新
     userLocation: null,
     tabs: [
       { id: 'hot', name: '热门活动' },
-      { id: 'nearby', name: '附近活动' }
+      { id: 'new', name: '最新活动' }
     ]
   },
   bindViewTap() {

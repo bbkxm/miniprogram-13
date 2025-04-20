@@ -7,80 +7,80 @@ const BASE_URL = 'https://your-api-server.com/api';
 // 模拟数据，实际开发时请删除
 const mockData = {
   activities: [
-    {
-      id: 1,
-      title: '徒步登山',
-      description: '周末一起徒步爬山，感受大自然的美好',
-      coverImage: '/images/activity1.jpg',
-      creator: {
-        id: 1,
-        nickname: '户外探险家',
-        avatar: '/images/avatar1.jpg'
-      },
-      startTime: '2023-04-20 09:00',
-      endTime: '2023-04-20 18:00',
-      location: '北京市海淀区颐和园',
-      coordinates: {
-        latitude: 39.9912,
-        longitude: 116.2678
-      },
-      participants: [
-        {id: 1, nickname: '户外探险家', avatar: '/images/avatar1.jpg'},
-        {id: 2, nickname: '山野行者', avatar: '/images/avatar2.jpg'},
-        {id: 3, nickname: '城市漫步者', avatar: '/images/avatar3.jpg'}
-      ],
-      checkpoints: [
-        {
-          id: 1,
-          name: '颐和园东宫门',
-          coordinates: {latitude: 39.9912, longitude: 116.2678}
-        },
-        {
-          id: 2,
-          name: '万寿山',
-          coordinates: {latitude: 39.9902, longitude: 116.2643}
-        },
-        {
-          id: 3,
-          name: '昆明湖',
-          coordinates: {latitude: 39.9889, longitude: 116.2619}
-        }
-      ]
-    },
-    {
-      id: 2,
-      title: '城市骑行',
-      description: '城市道路骑行，感受城市脉搏',
-      coverImage: '/images/activity2.jpg',
-      creator: {
-        id: 2,
-        nickname: '单车达人',
-        avatar: '/images/avatar2.jpg'
-      },
-      startTime: '2023-04-22 14:00',
-      endTime: '2023-04-22 17:00',
-      location: '北京市朝阳区奥林匹克公园',
-      coordinates: {
-        latitude: 40.0041,
-        longitude: 116.3917
-      },
-      participants: [
-        {id: 2, nickname: '单车达人', avatar: '/images/avatar2.jpg'},
-        {id: 4, nickname: '风行者', avatar: '/images/avatar4.jpg'},
-      ],
-      checkpoints: [
-        {
-          id: 1,
-          name: '南门',
-          coordinates: {latitude: 40.0041, longitude: 116.3917}
-        },
-        {
-          id: 2,
-          name: '森林公园',
-          coordinates: {latitude: 40.0082, longitude: 116.3944}
-        }
-      ]
-    }
+    // {
+    //   id: 1,
+    //   title: '徒步登山',
+    //   description: '周末一起徒步爬山，感受大自然的美好',
+    //   coverImage: '/images/activity1.jpg',
+    //   creator: {
+    //     id: 1,
+    //     nickname: '户外探险家',
+    //     avatar: '/images/avatar1.jpg'
+    //   },
+    //   startTime: '2023-04-20 09:00',
+    //   endTime: '2023-04-20 18:00',
+    //   location: '北京市海淀区颐和园',
+    //   coordinates: {
+    //     latitude: 39.9912,
+    //     longitude: 116.2678
+    //   },
+    //   participants: [
+    //     {id: 1, nickname: '户外探险家', avatar: '/images/avatar1.jpg'},
+    //     {id: 2, nickname: '山野行者', avatar: '/images/avatar2.jpg'},
+    //     {id: 3, nickname: '城市漫步者', avatar: '/images/avatar3.jpg'}
+    //   ],
+    //   checkpoints: [
+    //     {
+    //       id: 1,
+    //       name: '颐和园东宫门',
+    //       coordinates: {latitude: 39.9912, longitude: 116.2678}
+    //     },
+    //     {
+    //       id: 2,
+    //       name: '万寿山',
+    //       coordinates: {latitude: 39.9902, longitude: 116.2643}
+    //     },
+    //     {
+    //       id: 3,
+    //       name: '昆明湖',
+    //       coordinates: {latitude: 39.9889, longitude: 116.2619}
+    //     }
+    //   ]
+    // },
+    // {
+    //   id: 2,
+    //   title: '城市骑行',
+    //   description: '城市道路骑行，感受城市脉搏',
+    //   coverImage: '/images/activity2.jpg',
+    //   creator: {
+    //     id: 2,
+    //     nickname: '单车达人',
+    //     avatar: '/images/avatar2.jpg'
+    //   },
+    //   startTime: '2023-04-22 14:00',
+    //   endTime: '2023-04-22 17:00',
+    //   location: '北京市朝阳区奥林匹克公园',
+    //   coordinates: {
+    //     latitude: 40.0041,
+    //     longitude: 116.3917
+    //   },
+    //   participants: [
+    //     {id: 2, nickname: '单车达人', avatar: '/images/avatar2.jpg'},
+    //     {id: 4, nickname: '风行者', avatar: '/images/avatar4.jpg'},
+    //   ],
+    //   checkpoints: [
+    //     {
+    //       id: 1,
+    //       name: '南门',
+    //       coordinates: {latitude: 40.0041, longitude: 116.3917}
+    //     },
+    //     {
+    //       id: 2,
+    //       name: '森林公园',
+    //       coordinates: {latitude: 40.0082, longitude: 116.3944}
+    //     }
+    //   ]
+    // }
   ],
   checkins: [
     {
