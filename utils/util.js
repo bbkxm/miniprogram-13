@@ -21,6 +21,27 @@ const formatDate = (date) => {
   return `${year}-${formatNumber(month)}-${formatNumber(day)}`;
 };
 
+// 格式化日期时间为 YYYY-MM-DD HH:MM (显示用户友好格式)
+const formatDateTimeForDisplay = (date) => {
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const hour = date.getHours();
+  const minute = date.getMinutes();
+  return `${year}-${formatNumber(month)}-${formatNumber(day)} ${formatNumber(hour)}:${formatNumber(minute)}`;
+};
+
+// 格式化日期时间为 YYYY-MM-DD HH:MM:SS (接口存储格式)
+const formatDateTimeForAPI = (date) => {
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const hour = date.getHours();
+  const minute = date.getMinutes();
+  const second = date.getSeconds();
+  return `${year}-${formatNumber(month)}-${formatNumber(day)} ${formatNumber(hour)}:${formatNumber(minute)}:${formatNumber(second)}`;
+};
+
 const formatTimeFromNow = (timestamp) => {
   const now = new Date();
   const date = new Date(timestamp);
@@ -55,9 +76,39 @@ const getLocalUrl = (path, name) => {
   return tempFileName;
 };
 
+// 计算两个地理坐标点之间的距离（单位：米）
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 6371000; // 地球半径，单位米
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // 返回距离，单位米
+};
+
+// 角度转弧度
+const deg2rad = (deg) => {
+  return deg * (Math.PI / 180);
+};
+
+// 格式化距离显示
+const formatDistance = (distance) => {
+  if (distance < 1000) {
+    return Math.round(distance) + '米';
+  } else {
+    return (distance / 1000).toFixed(1) + '公里';
+  }
+};
+
 module.exports = {
   formatTime,
   formatDate,
+  formatDateTimeForDisplay,
+  formatDateTimeForAPI,
   getLocalUrl,
   formatTimeFromNow,
+  calculateDistance,
+  formatDistance,
 };

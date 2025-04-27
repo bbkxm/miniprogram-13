@@ -21,6 +21,10 @@
       
       <view class="location-content">
         <view wx:if="{{userLocation}}" class="location-info">
+          <view class="location-name">
+            <text class="location-label">位置:</text>
+            <text class="location-value">{{userLocation.name}}</text>
+          </view>
           <view class="location-coords">
             <text class="coords-label">经纬度:</text>
             <text class="coords-value">{{userLocation.latitude}}, {{userLocation.longitude}}</text>
@@ -45,10 +49,9 @@
 
     <!-- 打卡表单 -->
     <view class="checkin-form">
-      <view class="form-title">打卡内容</view>
-      
       <!-- 打卡文字 -->
       <view class="form-item">
+        <view class="form-label">打卡内容 <text class="required">*</text></view>
         <textarea 
           class="checkin-text" 
           placeholder="记录此刻的心情..." 
@@ -60,6 +63,7 @@
       
       <!-- 打卡图片 -->
       <view class="form-item">
+        <view class="form-label">打卡图片 <text class="required">*</text></view>
         <view class="image-list">
           <view 
             wx:for="{{images}}" 
@@ -92,8 +96,8 @@
     <!-- 提交按钮 -->
     <view class="btn-container">
       <button 
-        class="btn-submit {{(!inRange || submitting) ? 'disabled' : ''}}"
-        disabled="{{!inRange || submitting}}"
+        class="btn-submit {{(submitting) ? 'disabled' : ''}}"
+        disabled="{{submitting}}"
         loading="{{submitting}}"
         bindtap="submitCheckin"
       >{{submitting ? '提交中...' : '提交打卡'}}</button>

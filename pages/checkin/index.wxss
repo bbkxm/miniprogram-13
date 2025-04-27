@@ -71,6 +71,22 @@
   margin-top: 16rpx;
 }
 
+.location-name {
+  margin-bottom: 12rpx;
+}
+
+.location-label {
+  font-size: 28rpx;
+  color: #999;
+  margin-right: 8rpx;
+}
+
+.location-value {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+}
+
 .location-coords {
   margin-bottom: 16rpx;
 }
@@ -252,4 +268,15 @@
 .btn-submit.disabled {
   background-color: #cccccc;
   color: #fff;
+}
+
+.form-label {
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+
+.required {
+  color: #f56c6c;
+  margin-left: 4rpx;
 } 

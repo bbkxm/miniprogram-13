@@ -418,26 +418,36 @@
 
 /* 地图控制按钮 */
 .map-controls {
-  position: absolute;
-  bottom: 30rpx;
+  position: fixed;
+  bottom: 160rpx;
   right: 30rpx;
-  z-index: 50;
+  z-index: 100;
   display: flex;
   flex-direction: column;
 }
 
 .control-btn {
-  width: 80rpx;
-  height: 80rpx;
-  background-color: #fff;
+  width: 88rpx;
+  height: 88rpx;
+  background-color: #ffffff;
   border-radius: 50%;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.2);
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 20rpx;
+  margin-bottom: 24rpx;
+  transition: all 0.2s;
+}
+
+.control-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
 }
 
 .control-icon {
-  font-size: 40rpx;
+  font-size: 44rpx;
+}
+
+.location-icon, .refresh-icon, .fit-icon {
+  color: #4285f4;
 } 

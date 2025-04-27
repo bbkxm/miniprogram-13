@@ -64,7 +64,7 @@
             <view class="checkpoint-info">
               <view class="checkpoint-name">{{item.name}}</view>
               <view class="checkpoint-coordinates">
-                {{item.coordinates.latitude}}, {{item.coordinates.longitude}}
+                {{item.latitude}}, {{item.longitude}}
               </view>
             </view>
           </view>
@@ -80,12 +80,12 @@
         <view class="participants-list">
           <view 
             wx:for="{{activity.participants}}" 
-            wx:key="id" 
+            wx:key="userId" 
             class="participant-item"
           >
             <image class="participant-avatar" src="{{item.avatar}}"></image>
             <view class="participant-name">{{item.nickname}}</view>
-            <view wx:if="{{item.id === activity.creator.id}}" class="creator-badge">创建者</view>
+            <view wx:if="{{item.userId === activity.creator.userId}}" class="creator-badge">创建者</view>
           </view>
         </view>
       </view>
@@ -99,16 +99,16 @@
         <text class="clear-filter" bindtap="clearCheckpointFilter">清除筛选</text>
       </view>
       
-      <block wx:if="{{filteredCheckins.length > 0}}">
+      <block wx:if="{{checkins.length > 0}}">
         <view 
-          wx:for="{{filteredCheckins}}" 
+          wx:for="{{checkins}}" 
           wx:key="id" 
           class="checkin-card"
         >
           <view class="checkin-header">
-            <image class="checkin-avatar" src="/images/avatar{{item.userId}}.jpg"></image>
+            <image class="checkin-avatar" src="{{item.creator.avatar}}"></image>
             <view class="checkin-user-info">
-              <view class="checkin-nickname">用户{{item.userId}}</view>
+              <view class="checkin-nickname">{{item.creator.nickname}}</view>
               <view class="checkin-time">{{item.formattedTime}}</view>
             </view>
           </view>
@@ -132,7 +132,7 @@
             
             <view class="checkin-location">
               <text class="iconfont icon-location"></text>
-              <text>打卡点: {{activity.checkpoints[item.checkpointId - 1].name}}</text>
+              <text>打卡点: {{item.location}}</text>
             </view>
           </view>
         </view>
@@ -149,12 +149,17 @@
       <map
         id="activityMap"
         class="activity-map"
-        latitude="{{mapMarkers.length > 0 ? mapMarkers[0].latitude : (userLocation ? userLocation.latitude : 39.9)}}"
-        longitude="{{mapMarkers.length > 0 ? mapMarkers[0].longitude : (userLocation ? userLocation.longitude : 116.3)}}"
+        latitude="{{userLocation ? userLocation.latitude : (mapMarkers.length > 0 ? mapMarkers[0].latitude : 39.9)}}"
+        longitude="{{userLocation ? userLocation.longitude : (mapMarkers.length > 0 ? mapMarkers[0].longitude : 116.3)}}"
         scale="{{14}}"
         markers="{{mapMarkers}}"
         polyline="{{mapPolyline}}"
         show-location="true"
+        show-compass="true"
+        show-scale="true"
+        enable-rotate="true"
+        enable-zoom="true"
+        enable-scroll="true"
         bindmarkertap="onMarkerTap"
         bindlabeltap="onMarkerTap"
         bindcallouttap="onMarkerTap"
@@ -178,19 +183,19 @@
     <!-- 底部操作栏 -->
     <view class="action-bar">
       <button 
-        wx:if="{{!hasJoined && !isCreator}}" 
+        wx:if="{{!hasJoined}}" 
         class="btn-join" 
         bindtap="joinActivity"
       >加入活动</button>
       
       <button 
-        wx:if="{{hasJoined && !isCreator}}" 
+        wx:if="{{hasJoined}}" 
         class="btn-quit" 
         bindtap="quitActivity"
       >退出活动</button>
       
       <button 
-        wx:if="{{hasJoined || isCreator}}" 
+        wx:if="{{hasJoined}}" 
         class="btn-checkin" 
         bindtap="goToCheckin"
       >去打卡</button>

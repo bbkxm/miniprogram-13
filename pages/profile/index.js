@@ -4,164 +4,77 @@ const api = require('../../utils/api.js')
 Page({
   data: {
     userInfo: {
-      id: 2,
-      nickname: '山野行者',
-      avatar: '/images/avatar2.jpg'
+      userId: null,
+      nickname: '',
+      avatar: ''
     },
-    activities: [],
-    currentTab: 'joined', // joined: 已加入, created: 已创建
-    loading: true,
-    tabs: [
-      { id: 'joined', name: '已加入' },
-      { id: 'created', name: '已创建' }
-    ]
+    activities: {
+      joined: [],
+      created: []
+    },
+    loading: true
   },
 
   onLoad: function (options) {
-    this.getActivities()
+    // 检查用户是否已登录
+    const userInfo = wx.getStorageSync('userInfo')
+    if (userInfo && userInfo.userId) {
+      this.setData({
+        userInfo: userInfo
+      })
+    }
+    this.loadActivities()
   },
 
   onShow: function() {
     // 页面从后台切换到前台时刷新数据
     if (!this.data.loading) {
-      this.getActivities()
+      this.loadActivities()
     }
   },
 
   onPullDownRefresh: function() {
-    this.getActivities()
+    this.loadActivities()
     wx.stopPullDownRefresh()
   },
 
-  // 获取用户活动列表
-  getActivities: function() {
+  // 加载活动数据
+  loadActivities: function() {
     this.setData({ loading: true })
     
-    // 直接获取所有活动，不需要先调用getUserActivities
-    api.getActivities()
+    // 获取已加入的活动
+    api.getUserActivities({ type: 'joined' })
       .then(res => {
         if (res && res.data) {
-          const allActivities = res.data;
-          
-          // 确保allActivities是数组
-          if (Array.isArray(allActivities)) {
-            // 模拟一些已加入和已创建的活动
-            const joinedActivities = allActivities.filter(a => a.id === 1);
-            const createdActivities = allActivities.filter(a => a.id === 2);
-            
-            this.setData({
-              'activities.joined': joinedActivities,
-              'activities.created': createdActivities,
-              loading: false
-            });
-          } else {
-            console.error('活动数据不是数组', allActivities);
-            this.setData({ loading: false });
-            wx.showToast({
-              title: '数据格式错误',
-              icon: 'none'
-            });
-          }
-        } else {
-          this.setData({ loading: false });
+          this.setData({
+            'activities.joined': Array.isArray(res.data) ? res.data : []
+          })
         }
       })
       .catch(err => {
-        console.error('获取活动列表失败', err);
-        this.setData({ loading: false });
-        wx.showToast({
-          title: '获取活动失败',
-          icon: 'none'
-        });
-      });
-  },
+        console.error('获取已加入活动失败', err)
+      })
 
-  // 切换Tab
-  switchTab: function(e) {
-    const tabId = e.currentTarget.dataset.id
-    if (tabId !== this.data.currentTab) {
-      this.setData({ currentTab: tabId })
-    }
-  },
-
-  // 跳转到活动详情
-  navigateToDetail: function(e) {
-    const activityId = e.currentTarget.dataset.id
-    wx.navigateTo({
-      url: '/pages/activity/index?id=' + activityId
-    })
-  },
-
-  // 跳转到发布活动页面
-  navigateToPublish: function() {
-    wx.navigateTo({
-      url: '/pages/publishActivity/index'
-    })
-  },
-
-  // 跳转到活动广场页面
-  navigateToIndex: function() {
-    wx.switchTab({
-      url: '/pages/index/index'
-    })
-  },
-
-  // 修改用户信息
-  editUserInfo: function() {
-    wx.showActionSheet({
-      itemList: ['修改头像', '修改昵称'],
-      success: (res) => {
-        if (res.tapIndex === 0) {
-          // 修改头像
-          this.chooseAvatar()
-        } else if (res.tapIndex === 1) {
-          // 修改昵称
-          this.editNickname()
-        }
-      }
-    })
-  },
-
-  // 选择头像
-  chooseAvatar: function() {
-    wx.chooseImage({
-      count: 1,
-      sizeType: ['compressed'],
-      sourceType: ['album', 'camera'],
-      success: (res) => {
-        // 模拟上传头像
-        setTimeout(() => {
+    // 获取已创建的活动
+    api.getUserActivities({ type: 'created' })
+      .then(res => {
+        if (res && res.data) {
           this.setData({
-            'userInfo.avatar': res.tempFilePaths[0]
-          })
-          
-          wx.showToast({
-            title: '头像修改成功',
-            icon: 'success'
-          })
-        }, 1000)
-      }
-    })
-  },
-
-  // 修改昵称
-  editNickname: function() {
-    wx.showModal({
-      title: '修改昵称',
-      editable: true,
-      placeholderText: '请输入新昵称',
-      success: (res) => {
-        if (res.confirm && res.content) {
-          this.setData({
-            'userInfo.nickname': res.content
-          })
-          
-          wx.showToast({
-            title: '昵称修改成功',
-            icon: 'success'
+            'activities.created': Array.isArray(res.data) ? res.data : [],
+            loading: false
           })
         }
-      }
+      })
+      .catch(err => {
+        console.error('获取已创建活动失败', err)
+        this.setData({ loading: false })
+      })
+  },
+
+  // 导航到我的活动
+  navigateToMyActivities: function() {
+    wx.navigateTo({
+      url: '/pages/myActivities/index'
     })
   },
 
@@ -173,18 +86,68 @@ Page({
       success: (res) => {
         if (res.confirm) {
           // 清除本地存储的用户信息和令牌
-          // wx.clearStorageSync()
-          
+          wx.clearStorageSync()
+          this.setData({
+            userInfo: {
+              userId: null,
+              nickname: '',
+              avatar: ''
+            }
+          })
           wx.showToast({
             title: '已退出登录',
-            icon: 'success',
-            duration: 1500,
-            success: () => {
-              // 这里可以根据实际需求进行页面跳转
-              // 例如跳转到登录页面
+            icon: 'success'
+          })
+        }
+      }
+    })
+  },
+
+  navigateToMyCreated() {
+    wx.navigateTo({
+      url: '/pages/myActivities/index?tab=created'
+    })
+  },
+
+  navigateToMyJoined() {
+    wx.navigateTo({
+      url: '/pages/myActivities/index?tab=joined'
+    })
+  },
+
+  // 获取用户信息
+  onGetUserInfo: function() {
+    // 调用微信登录
+    wx.getUserProfile({
+      desc: '用于完善会员资料',
+      success: (res) => {
+        if (res.userInfo) {
+          // 获取到用户信息
+          const userInfo = res.userInfo
+          wx.login({
+            success: (loginRes) => {
+              if (loginRes.code) {
+                // 这里可以发送 code 到后端换取 openId 和 session_key
+                // 示例中直接使用微信返回的用户信息
+                const userData = {
+                  ...userInfo,
+                  userId: null // 实际应该使用后端返回的用户ID
+                }
+                // 保存用户信息到本地存储
+                wx.setStorageSync('userInfo', userData)
+                this.setData({
+                  userInfo: userData
+                })
+              }
             }
           })
         }
+      },
+      fail: () => {
+        wx.showToast({
+          title: '登录失败',
+          icon: 'none'
+        })
       }
     })
   }

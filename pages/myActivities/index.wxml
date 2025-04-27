@@ -1,0 +1,63 @@
+<view class="container">
+  <!-- 顶部Tab切换 -->
+  <view class="tabs">
+    <view 
+      class="tab {{currentTab === 'created' ? 'active' : ''}}" 
+      bindtap="switchTab" 
+      data-type="created"
+    >我创建的</view>
+    <view 
+      class="tab {{currentTab === 'joined' ? 'active' : ''}}" 
+      bindtap="switchTab" 
+      data-type="joined"
+    >我加入的</view>
+  </view>
+
+  <!-- 活动列表 -->
+  <view class="activities">
+    <!-- 加载中状态 -->
+    <view wx:if="{{loading}}" class="loading">
+      <t-loading theme="circular" size="40rpx" text="加载中..." />
+    </view>
+
+    <!-- 活动列表内容 -->
+    <block wx:else>
+      <view class="activity-list" wx:if="{{activities.length > 0}}">
+        <view 
+          class="activity-item" 
+          wx:for="{{activities}}" 
+          wx:key="id"
+          bindtap="navigateToDetail"
+          data-id="{{item.id}}"
+        >
+          <image class="activity-image" src="{{item.coverImage}}" mode="aspectFill"></image>
+          <view class="activity-info">
+            <view class="activity-title">{{item.title}}</view>
+            <view class="activity-meta">
+              <view class="activity-time">
+                <text class="time-icon">🕒</text>
+                <text>{{item.startTime}}</text>
+              </view>
+              <view class="activity-count">
+                <text class="count-icon">👥</text>
+                <text>{{item.participants.length}}人参与</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 空状态 -->
+      <view wx:else class="empty">
+        <image class="empty-icon" src="/images/empty.png"></image>
+        <text class="empty-text">{{currentTab === 'created' ? '暂未创建活动' : '暂未参加活动'}}</text>
+        <button 
+          class="action-button" 
+          bindtap="{{currentTab === 'created' ? 'navigateToCreate' : 'navigateToExplore'}}"
+        >
+          {{currentTab === 'created' ? '发起活动' : '去浏览'}}
+        </button>
+      </view>
+    </block>
+  </view>
+</view> 

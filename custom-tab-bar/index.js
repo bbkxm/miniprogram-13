@@ -35,12 +35,6 @@ Component({
           });
         }
       }
-
-      // 同步全局未读消息数量
-      this.setUnreadNum(app.globalData.unreadNum);
-      app.eventBus.on('unread-num-change', (unreadNum) => {
-        this.setUnreadNum(unreadNum);
-      });
     },
   },
   methods: {

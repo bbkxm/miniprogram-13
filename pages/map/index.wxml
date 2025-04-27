@@ -20,10 +20,33 @@
       bindlabeltap="markerTap"
       bindcallouttap="markerTap"
       bindload="mapLoaded"
+      enable-3D="true"
+      enable-building="true"
+      enable-rotate="true"
+      enable-zoom="true"
+      enable-scroll="true"
+      show-compass="true"
+      show-scale="true"
     ></map>
+
+    <!-- 搜索框 -->
+    <view class="search-box {{showSearch ? 'show' : ''}}">
+      <input 
+        class="search-input" 
+        placeholder="搜索打卡记录" 
+        value="{{searchKeyword}}"
+        bindinput="onSearchInput"
+        bindconfirm="onSearchConfirm"
+      />
+      <view class="search-btn" bindtap="onSearchConfirm">搜索</view>
+    </view>
 
     <!-- 地图控制按钮 -->
     <view class="map-controls">
+      <!-- 搜索按钮 -->
+      <view class="control-btn" bindtap="toggleFilterPanel">
+        <view class="control-icon filter-icon">🔍</view>
+      </view>
       <view class="control-btn" bindtap="moveToLocation">
         <view class="control-icon location-icon">📍</view>
       </view>

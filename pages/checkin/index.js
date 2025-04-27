@@ -20,7 +20,8 @@ Page({
 
   onLoad: function (options) {
     if (options.activityId) {
-      this.setData({ activityId: parseInt(options.activityId) })
+      // Keep activityId as string to match API expectations
+      this.setData({ activityId: options.activityId })
       this.loadActivityDetail()
       this.getUserLocation()
     } else {
@@ -71,9 +72,13 @@ Page({
       success: (res) => {
         const location = {
           latitude: res.latitude,
-          longitude: res.longitude
+          longitude: res.longitude,
+          name: '正在获取位置名称...'  // 初始占位文本
         }
         this.setData({ userLocation: location })
+        
+        // 获取位置名称 (反向地理编码)
+        this.getLocationName(res.latitude, res.longitude)
         
         // 如果已有活动信息，计算与打卡点的距离
         if (this.data.activity) {
@@ -82,11 +87,37 @@ Page({
       },
       fail: (err) => {
         console.error('获取位置失败', err)
-        wx.showToast({
-          title: '获取位置失败，请授权位置权限',
-          icon: 'none',
-          duration: 2000
-        })
+        
+        // 判断是否是权限问题
+        if (err.errMsg.indexOf('auth deny') >= 0 || err.errCode === 2 || err.errMsg.indexOf('permission') >= 0) {
+          // 显示对话框引导用户开启权限
+          wx.showModal({
+            title: '需要位置权限',
+            content: '打卡功能需要获取您的位置信息，请授权位置权限',
+            confirmText: '去设置',
+            cancelText: '取消',
+            success: (res) => {
+              if (res.confirm) {
+                // 打开设置页面
+                wx.openSetting({
+                  success: (settingRes) => {
+                    if (settingRes.authSetting['scope.userLocation']) {
+                      // 用户已授权，重新获取位置
+                      this.getUserLocation()
+                    }
+                  }
+                })
+              }
+            }
+          })
+        } else {
+          // 其他错误
+          wx.showToast({
+            title: '获取位置失败，请检查GPS是否开启',
+            icon: 'none',
+            duration: 2000
+          })
+        }
       }
     })
   },
@@ -99,7 +130,41 @@ Page({
     
     setTimeout(() => {
       wx.hideLoading()
-    }, 1000)
+    }, 1500)
+  },
+
+  // 获取位置名称
+  getLocationName: function(latitude, longitude) {
+      // 临时设置一个默认名称，避免API调用问题
+      this.setData({
+        'userLocation.name': `位置(${latitude.toFixed(6)}, ${longitude.toFixed(6)})`
+      });
+    // // 使用微信小程序提供的逆地理编码接口
+    // wx.request({
+    //   url: 'https://apis.map.qq.com/ws/geocoder/v1/',
+    //   data: {
+    //     location: latitude + ',' + longitude,
+    //     key: 'SXZBZ-GZYWZ-AAJXE-7NCSZ-5ULKJ-EEFGG',  // 使用演示Key，实际使用中需替换为自己的腾讯地图key
+    //     get_poi: 0
+    //   },
+    //   success: (res) => {
+    //     if (res.data && res.data.status === 0 && res.data.result) {
+    //       const addressComponent = res.data.result.address_component;
+    //       const formatted_addresses = res.data.result.formatted_addresses;
+    //       const name = formatted_addresses?.recommend || res.data.result.address;
+          
+    //       this.setData({
+    //         'userLocation.name': name
+    //       });
+    //     }
+    //   },
+    //   fail: (err) => {
+    //     console.error('获取位置名称失败', err);
+    //     this.setData({
+    //       'userLocation.name': '未知位置'
+    //     });
+    //   }
+    // });
   },
 
   // 计算与各打卡点的距离
@@ -114,8 +179,8 @@ Page({
       const distance = util.calculateDistance(
         userLocation.latitude,
         userLocation.longitude,
-        checkpoint.coordinates.latitude,
-        checkpoint.coordinates.longitude
+        checkpoint.latitude,
+        checkpoint.longitude
       )
       
       if (distance < minDistance) {
@@ -201,9 +266,19 @@ Page({
       return
     }
     
-    if (!inRange) {
+    // 验证打卡内容
+    if (!text || text.trim() === '') {
       wx.showToast({
-        title: '不在打卡点范围内',
+        title: '请填写打卡内容',
+        icon: 'none'
+      })
+      return
+    }
+
+    // 验证打卡图片
+    if (!images || images.length === 0) {
+      wx.showToast({
+        title: '请至少上传一张图片',
         icon: 'none'
       })
       return
@@ -217,7 +292,9 @@ Page({
       checkpointId,
       text,
       images,
-      coordinates: userLocation,
+      latitude: userLocation.latitude,
+      longitude: userLocation.longitude,
+      location: userLocation.name,
       createdAt: new Date().toISOString()
     }
     
@@ -239,17 +316,37 @@ Page({
       .then(res => {
         this.setData({ submitting: false })
         
-        if (res && res.data && res.data.success) {
+        if (res && res.data) {
+          console.log('打卡成功，准备返回上一页');
+          
+          // 先显示提示
           wx.showToast({
             title: '打卡成功',
             icon: 'success',
-            duration: 1500,
-            success: () => {
-              setTimeout(() => {
-                wx.navigateBack()
-              }, 1500)
-            }
-          })
+            duration: 1500
+          });
+          
+          // 确保导航操作在提示显示后执行，但不依赖于提示的回调
+          setTimeout(() => {
+            console.log('尝试返回上一页');
+            wx.navigateBack({
+              success: () => console.log('导航返回成功'),
+              fail: (err) => {
+                console.log('无法返回，将重定向到活动页');
+                // 如果没有上一页，则跳转到活动页面
+                if (this.data.activityId) {
+                  wx.redirectTo({
+                    url: `/pages/activity/index?id=${this.data.activityId}`
+                  });
+                } else {
+                  // 如果没有活动ID，则跳转到主页
+                  wx.switchTab({
+                    url: '/pages/index/index'
+                  });
+                }
+              }
+            });
+          }, 1500);
         }
       })
       .catch(err => {

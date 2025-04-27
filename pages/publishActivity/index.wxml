@@ -45,9 +45,7 @@
 				 range="{{categories}}"
 				 bindchange="onSelectCategory"
 				>
-					<view class="picker-value">
-						{{formData.category || '请选择活动分类'}}
-					</view>
+					<view class="picker-value">{{formData.category || '请选择活动分类'}}</view>
 				</picker>
 			</view>
 
@@ -78,7 +76,7 @@
 					<block wx:if="{{formData.location}}">
 						<view class="location-text">{{formData.location}}</view>
 						<view class="location-coordinates">
-							{{formData.coordinates.latitude}}, {{formData.coordinates.longitude}}
+							{{formData.latitude}}, {{formData.longitude}}
 						</view>
 					</block>
 					<view wx:else class="location-placeholder">
@@ -91,8 +89,8 @@
 			<view class="form-group">
 				<view class="form-label">活动描述</view>
 				<textarea
-				 class="form-textarea"
-				 placeholder="请输入活动描述..."
+				 class="form-control"
+				 placeholder="请输入活动描述"
 				 value="{{formData.description}}"
 				 bindinput="onInputDescription"
 				/>
@@ -107,6 +105,29 @@
 		bindtap="submitForm"
 		loading="{{submitting}}"
 		>发布活动</button>
+	</view>
+
+	<!-- 日期时间选择器弹窗 -->
+	<view class="date-picker-popup" wx:if="{{showDatePicker}}">
+		<view class="date-picker-mask" bindtap="onDatePickerCancel"></view>
+		<view class="date-picker-content">
+			<view class="date-picker-header">
+				<view class="cancel-btn" bindtap="onDatePickerCancel">取消</view>
+				<view class="title">选择{{datePickerType === 'start' ? '开始' : '结束'}}时间</view>
+				<view class="confirm-btn" bindtap="onDatePickerConfirm">确定</view>
+			</view>
+			<picker-view class="date-picker-view" value="{{datePickerValue}}" bindchange="onDatePickerChange">
+				<picker-view-column>
+					<view wx:for="{{datePickerDays}}" wx:key="index" class="picker-item">{{item}}</view>
+				</picker-view-column>
+				<picker-view-column>
+					<view wx:for="{{datePickerHours}}" wx:key="index" class="picker-item">{{item}}时</view>
+				</picker-view-column>
+				<picker-view-column>
+					<view wx:for="{{datePickerMinutes}}" wx:key="index" class="picker-item">{{item}}分</view>
+				</picker-view-column>
+			</picker-view>
+		</view>
 	</view>
 </view>
 

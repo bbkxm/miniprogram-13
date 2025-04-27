@@ -4,15 +4,22 @@ const util = require('../../utils/util.js')
 
 Page({
   data: {
-    activityId: null,      // 当前活动ID（如果是单个活动的地图）
-    activity: null,        // 当前活动数据
-    activities: [],        // 所有活动数据（如果是查看所有打卡点）
+    activityId: null,      // 当前活动ID
     markers: [],           // 地图标记点
     polyline: [],          // 路线数据
     userLocation: null,    // 用户位置
     scale: 14,             // 地图缩放级别
     loading: true,         // 加载状态
-    showAllActivities: false // 是否显示所有活动的打卡点
+    checkins: [],          // 打卡记录
+    // 新增筛选相关数据
+    showFilterPanel: false, // 是否显示筛选面板
+    activityTypes: ['全部', '跑步', '骑行', '徒步', '其他'], // 活动类型列表
+    activityTypeIndex: 0,  // 当前选中的活动类型索引
+    startDate: '',         // 开始日期
+    endDate: '',           // 结束日期
+    originalCheckins: [],  // 原始打卡记录
+    showSearch: false,     // 是否显示搜索框
+    searchKeyword: '',     // 搜索关键词
   },
 
   onLoad: function (options) {
@@ -21,33 +28,51 @@ Page({
     // 加载用户位置
     this.getUserLocation()
     
-    // 判断是查看单个活动还是所有活动的打卡点
-    if (options.showAll === 'true') {
-      // 查看所有活动的打卡点
-      console.log('显示所有活动打卡点')
-      this.setData({ showAllActivities: true })
-      this.loadAllActivities()
-    } else if (options.activityId) {
-      // 查看单个活动的打卡点
-      const activityId = parseInt(options.activityId)
-      console.log('显示单个活动打卡点, ID:', activityId)
-      this.setData({ activityId: activityId })
-      
-      // 如果传入了markers，则直接使用
-      if (options.markers) {
-        try {
-          console.log('使用传入的标记数据')
-          const markers = JSON.parse(decodeURIComponent(options.markers))
+    this.loadCheckins()
+  },
+
+  onShow: function() {
+    console.log('地图页面显示')
+    // 每次显示页面时都重新加载打卡点
+    this.loadCheckins()
+  },
+  
+  // 下拉刷新
+  onPullDownRefresh: function() {
+    if (this.data.activityId) {
+      this.loadCheckins()
+    }
+    wx.stopPullDownRefresh()
+  },
+
+  // 加载打卡记录
+  loadCheckins: function(keyword = '') {
+    this.setData({ loading: true })
+
+    const params = {
+      searchKeyword: keyword    
+    }
+
+    api.getCheckins(params)
+      .then(res => {
+        if (res && res.data) {
+          console.log('获取到打卡记录:', res.data)
           
-          // 添加必要的标记属性
-          const enhancedMarkers = markers.map((marker, index) => {
+          // 保存原始数据
+          this.setData({
+            originalCheckins: res.data
+          })
+          
+          // 构建地图标记点
+          const markers = res.data.map((checkin, index) => {
             return {
-              ...marker,
-              iconPath: '/images/marker.png',
-              width: 30,
-              height: 30,
+              id: Number(checkin.id),
+              activityId: checkin.activityId,
+              latitude: Number(checkin.latitude),
+              longitude: Number(checkin.longitude),
+              title: checkin.creator.nickname + '在【' + checkin.activity.title + '】活动' || '打卡点',
               callout: {
-                content: marker.title,
+                content: checkin.creator.nickname + '在【' + checkin.activity.title + '】活动' || '打卡点',
                 color: '#000000',
                 fontSize: 14,
                 borderRadius: 4,
@@ -61,272 +86,50 @@ Page({
                 anchorX: 0,
                 anchorY: 0,
                 textAlign: 'center'
+              },
+              anchor: {
+                x: 0.5,
+                y: 1
               }
             }
           })
           
           this.setData({ 
-            markers: enhancedMarkers, 
-            loading: false,
-            latitude: enhancedMarkers[0].latitude,
-            longitude: enhancedMarkers[0].longitude
-          })
-          
-          // 添加用户位置标记
-          if (this.data.userLocation) {
-            this.addUserLocationMarker()
-          }
-        } catch (err) {
-          console.error('解析markers失败', err)
-          // 解析失败时尝试加载活动详情
-          this.loadActivityDetail()
-        }
-      } else {
-        // 否则加载活动详情
-        console.log('加载活动详情')
-        this.loadActivityDetail()
-      }
-    } else {
-      // 没有指定参数时（如从tabBar进入），默认显示所有活动的打卡点
-      console.log('无参数，默认显示所有活动')
-      this.setData({ showAllActivities: true })
-      this.loadAllActivities()
-    }
-  },
-  
-  onShow: function() {
-    console.log('地图页面显示')
-    
-    // 从缓存检查是否有需要显示的单个活动
-    wx.getStorage({
-      key: 'current_view_activity',
-      success: (res) => {
-        // 获取缓存的活动信息
-        const activityInfo = res.data
-        console.log('从缓存获取活动信息:', activityInfo)
-        
-        // 如果是从活动详情页跳转来显示单个活动
-        if (activityInfo && activityInfo.activityId && !activityInfo.showAll) {
-          // 设置为单个活动模式
-          this.setData({ 
-            showAllActivities: false,
-            activityId: activityInfo.activityId
-          })
-          
-          // 加载单个活动数据
-          this.loadActivityDetail()
-          
-          // 清除缓存，避免下次自动加载
-          wx.removeStorage({
-            key: 'current_view_activity'
-          })
-          
-          // 不执行下面的刷新所有活动代码
-          return
-        }
-      },
-      complete: () => {
-        // 无论是否有缓存活动，如果当前是显示所有活动模式且不是加载状态，就刷新所有活动
-        if (this.data.showAllActivities && !this.data.loading) {
-          this.loadAllActivities()
-        }
-      }
-    })
-  },
-  
-  // 下拉刷新
-  onPullDownRefresh: function() {
-    if (this.data.showAllActivities) {
-      this.loadAllActivities()
-    } else if (this.data.activityId) {
-      this.loadActivityDetail()
-    }
-    wx.stopPullDownRefresh()
-  },
-
-  // 加载所有活动数据
-  loadAllActivities: function() {
-    api.getActivities()
-      .then(res => {
-        if (res && res.data) {
-          // 更新活动数据
-          this.setData({ 
-            activities: res.data,
-            loading: false
-          })
-          
-          // 初始化地图标记
-          this.initAllActivitiesMarkers()
-          
-          // 添加用户位置标记
-          if (this.data.userLocation) {
-            this.addUserLocationMarker()
-          }
-        } else {
-          // 即使没有活动数据，也设置loading为false以显示地图
-          this.setData({ loading: false })
-          
-          // 添加用户位置标记
-          if (this.data.userLocation) {
-            this.addUserLocationMarker()
-          }
-        }
-      })
-      .catch(err => {
-        console.error('获取活动列表失败', err)
-        wx.showToast({
-          title: '获取活动失败',
-          icon: 'none'
-        })
-        this.setData({ loading: false })
-      })
-  },
-
-  // 加载单个活动详情
-  loadActivityDetail: function() {
-    this.setData({ loading: true })
-
-    api.getActivityDetail(this.data.activityId)
-      .then(res => {
-        if (res && res.data) {
-          const activity = res.data
-          
-          // 构建地图标记点
-          const markers = this.buildMarkers(activity)
-          
-          // 构建路线（如果有多个标记点）
-          const polyline = this.buildPolyline(activity)
-          
-          this.setData({ 
-            activity,
+            checkins: res.data,
             markers,
-            polyline,
             loading: false
+          }, () => {
+            // 在 setData 的回调中添加用户位置标记
+            if (this.data.userLocation) {
+              this.addUserLocationMarker()
+            }
+            
+            // 确保地图上下文存在
+            if (!this.mapCtx) {
+              this.mapCtx = wx.createMapContext('map')
+            }
+            
+            // 延迟调整视野，确保所有标记点都已添加
+            setTimeout(() => {
+              this.includeAllMarkers()
+            }, 1000)
+          })
+        } else {
+          this.setData({ loading: false })
+          wx.showToast({
+            title: '没有打卡记录',
+            icon: 'none'
           })
         }
       })
       .catch(err => {
-        console.error('获取活动详情失败', err)
+        console.error('获取打卡记录失败', err)
         this.setData({ loading: false })
-        
         wx.showToast({
-          title: '获取活动详情失败',
+          title: '获取打卡记录失败',
           icon: 'none'
         })
       })
-  },
-
-  // 初始化所有活动的地图标记点
-  initAllActivitiesMarkers: function() {
-    const { activities } = this.data
-    const markers = []
-    
-    // 用于追踪已添加的坐标点，避免重复
-    const addedCoordinates = new Set()
-    
-    // 为每个活动的每个打卡点创建标记
-    activities.forEach((activity, activityIndex) => {
-      if (activity.checkpoints && Array.isArray(activity.checkpoints)) {
-        activity.checkpoints.forEach((checkpoint, checkpointIndex) => {
-          const coordinates = checkpoint.coordinates
-          const coordKey = `${coordinates.latitude},${coordinates.longitude}`
-          
-          // 检查该坐标是否已添加（避免重复标记）
-          if (!addedCoordinates.has(coordKey)) {
-            addedCoordinates.add(coordKey)
-            
-            markers.push({
-              id: checkpoint.id,
-              activityId: activity.id,
-              latitude: coordinates.latitude,
-              longitude: coordinates.longitude,
-              title: checkpoint.name,
-              iconPath: '/images/marker.png', // 标记点图标，需要添加
-              width: 30,
-              height: 30,
-              callout: {
-                content: `${activity.title}: ${checkpoint.name}`,
-                color: '#000000',
-                fontSize: 14,
-                borderRadius: 4,
-                padding: 5,
-                display: 'ALWAYS'
-              }
-            })
-          }
-        })
-      }
-    })
-    
-    // 如果有标记点，设置地图中心为第一个标记点
-    if (markers.length > 0) {
-      this.setData({
-        markers,
-        latitude: markers[0].latitude,
-        longitude: markers[0].longitude
-      })
-    } else {
-      this.setData({ markers })
-    }
-    
-    // 增加用户位置标记
-    this.addUserLocationMarker()
-  },
-
-  // 构建单个活动的地图标记点
-  buildMarkers: function(activity) {
-    if (!activity || !activity.checkpoints) return []
-    
-    const markers = activity.checkpoints.map((checkpoint, index) => {
-      return {
-        id: checkpoint.id,
-        activityId: activity.id,
-        latitude: checkpoint.coordinates.latitude,
-        longitude: checkpoint.coordinates.longitude,
-        title: checkpoint.name,
-        iconPath: '/images/marker.png', // 标记点图标，需要添加
-        width: 30,
-        height: 30,
-        callout: {
-          content: checkpoint.name,
-          color: '#000000',
-          fontSize: 14,
-          borderRadius: 4,
-          padding: 5,
-          display: 'ALWAYS'
-        },
-        label: {
-          content: (index + 1).toString(),
-          color: '#FFFFFF',
-          fontSize: 14,
-          anchorX: 0,
-          anchorY: 0,
-          textAlign: 'center'
-        }
-      }
-    })
-    
-    return markers
-  },
-
-  // 构建路线
-  buildPolyline: function(activity) {
-    if (!activity || !activity.checkpoints || activity.checkpoints.length < 2) return []
-    
-    const points = activity.checkpoints.map(checkpoint => {
-      return {
-        latitude: checkpoint.coordinates.latitude,
-        longitude: checkpoint.coordinates.longitude
-      }
-    })
-    
-    return [{
-      points,
-      color: '#4285f4',
-      width: 4,
-      dottedLine: false,
-      arrowLine: true
-    }]
   },
 
   // 获取用户位置
@@ -346,10 +149,36 @@ Page({
       },
       fail: (err) => {
         console.error('获取位置失败', err)
-        wx.showToast({
-          title: '获取位置失败，请授权位置权限',
-          icon: 'none'
-        })
+        
+        // 判断是否是权限问题
+        if (err.errMsg.indexOf('auth deny') >= 0 || err.errCode === 2 || err.errMsg.indexOf('permission') >= 0) {
+          // 显示对话框引导用户开启权限
+          wx.showModal({
+            title: '需要位置权限',
+            content: '地图功能需要获取您的位置信息，请授权位置权限',
+            confirmText: '去设置',
+            cancelText: '取消',
+            success: (res) => {
+              if (res.confirm) {
+                // 打开设置页面
+                wx.openSetting({
+                  success: (settingRes) => {
+                    if (settingRes.authSetting['scope.userLocation']) {
+                      // 用户已授权，重新获取位置
+                      this.getUserLocation()
+                    }
+                  }
+                })
+              }
+            }
+          })
+        } else {
+          // 其他错误
+          wx.showToast({
+            title: '获取位置失败，请检查GPS是否开启',
+            icon: 'none'
+          })
+        }
       }
     })
   },
@@ -363,7 +192,7 @@ Page({
       latitude: this.data.userLocation.latitude,
       longitude: this.data.userLocation.longitude,
       title: '当前位置',
-      iconPath: '/images/user_location.png', // 用户位置图标，需要添加
+      iconPath: '/images/user_location.png',
       width: 30,
       height: 30,
       callout: {
@@ -373,6 +202,10 @@ Page({
         borderRadius: 4,
         padding: 5,
         display: 'BYCLICK'
+      },
+      anchor: {
+        x: 0.5,
+        y: 0.5
       }
     }
     
@@ -396,16 +229,79 @@ Page({
 
   // 定位到用户位置
   moveToLocation: function() {
-    if (!this.data.userLocation) return
+    console.log('开始定位到用户位置')
+    console.log('当前用户位置:', this.data.userLocation)
+    console.log('地图上下文:', this.mapCtx)
     
-    this.mapCtx.moveToLocation()
+    if (!this.data.userLocation) {
+      console.log('用户位置不存在，尝试获取位置')
+      this.getUserLocation()
+      return
+    }
+
+    if (!this.mapCtx) {
+      console.log('地图上下文不存在，尝试创建')
+      this.mapCtx = wx.createMapContext('map')
+      if (!this.mapCtx) {
+        console.log('创建地图上下文失败')
+        return
+      }
+    }
+    
+    // 先设置地图中心点为用户位置
+    console.log('设置地图中心点:', {
+      latitude: this.data.userLocation.latitude,
+      longitude: this.data.userLocation.longitude,
+      scale: 16
+    })
+    
+    this.setData({
+      latitude: this.data.userLocation.latitude,
+      longitude: this.data.userLocation.longitude,
+      scale: 16  // 设置一个合适的缩放级别
+    }, () => {
+      console.log('地图中心点设置完成')
+      // 延迟一下，确保地图中心点已经更新
+      setTimeout(() => {
+        console.log('开始调用 moveToLocation')
+        // 调用 moveToLocation 方法
+        this.mapCtx.moveToLocation({
+          latitude: this.data.userLocation.latitude,
+          longitude: this.data.userLocation.longitude,
+          success: () => {
+            console.log('移动到用户位置成功')
+          },
+          fail: (err) => {
+            console.error('移动到用户位置失败', err)
+          }
+        })
+      }, 100)
+    })
   },
 
   // 视野包含所有标记点
   includeAllMarkers: function() {
-    if (!this.mapCtx || !this.data.markers || this.data.markers.length === 0) {
+    console.log('开始调整视野包含所有标记点')
+    console.log('当前标记点数量:', this.data.markers ? this.data.markers.length : 0)
+    console.log('当前用户位置:', this.data.userLocation)
+    console.log('地图上下文:', this.mapCtx)
+    
+    if (!this.mapCtx) {
+      console.log('地图上下文不存在，尝试创建')
+      this.mapCtx = wx.createMapContext('map')
+      if (!this.mapCtx) {
+        console.log('创建地图上下文失败，延迟重试')
+        setTimeout(() => {
+          this.includeAllMarkers()
+        }, 500)
+        return
+      }
+    }
+    
+    if (!this.data.markers || this.data.markers.length === 0) {
+      console.log('没有标记点，尝试移动到用户位置')
       // 如果没有标记点，则直接返回或移动到用户位置
-      if (this.data.userLocation && this.mapCtx) {
+      if (this.data.userLocation) {
         this.moveToLocation()
       }
       return
@@ -413,8 +309,8 @@ Page({
     
     // 使用 includePoints 方法使视野包含所有标记点
     const points = this.data.markers.map(marker => ({
-      latitude: marker.latitude,
-      longitude: marker.longitude
+      latitude: Number(marker.latitude),
+      longitude: Number(marker.longitude)
     }))
     
     // 添加用户位置（如果存在）
@@ -422,176 +318,90 @@ Page({
       points.push(this.data.userLocation)
     }
     
-    this.mapCtx.includePoints({
-      points: points,
-      padding: [80, 80, 80, 80]
+    console.log('要包含的点:', points)
+    
+    // 先调整缩放级别
+    console.log('设置地图缩放级别为 12')
+    this.setData({
+      scale: 12  // 设置一个较小的缩放级别，确保能看到更大的范围
+    }, () => {
+      console.log('地图缩放级别设置完成')
+      // 延迟一下，确保缩放级别已经生效
+      setTimeout(() => {
+        console.log('开始调用 includePoints')
+        this.mapCtx.includePoints({
+          points: points,
+          padding: [200, 200, 200, 200]
+        })
+      }, 100)
     })
   },
 
   // 点击标记点
   markerTap: function(e) {
-    const markerId = e.markerId
-    const marker = this.data.markers.find(m => m.id === markerId)
+    const markerId = Number(e.markerId)
     
     // 如果是用户位置标记(id为0)，不做处理
-    if (markerId === 0) {
-      return
+    if (markerId === 0) return
+    
+    // 找到对应的打卡记录
+    const checkin = this.data.checkins.find(c => Number(c.id) === markerId)
+    if (!checkin) return
+    
+    let content = `打卡点: ${checkin.location || '未知位置'}\n`
+    content += `打卡时间: ${checkin.checkinTime}\n`
+    if (checkin.text) {
+      content += `备注: ${checkin.text}`
     }
     
-    if (marker) {
-      // 单个活动的打卡点处理
-      if (!this.data.showAllActivities && this.data.activity) {
-        this.handleSingleActivityMarkerTap(marker)
-      } 
-      // 所有活动的打卡点处理
-      else if (this.data.showAllActivities) {
-        this.handleAllActivitiesMarkerTap(marker)
-      }
-    }
-  },
-  
-  // 处理单个活动的打卡点点击
-  handleSingleActivityMarkerTap: function(marker) {
-    // 找到对应的打卡点
-    const checkpoint = this.data.activity.checkpoints.find(cp => cp.id === marker.id)
-    
-    if (checkpoint) {
-      // 查找与该打卡点相关的打卡记录
-      api.getCheckins(this.data.activityId)
-        .then(res => {
-          if (res && res.data) {
-            // 筛选出属于该打卡点的打卡记录
-            const checkpointCheckins = res.data.filter(checkin => checkin.checkpointId === checkpoint.id)
-            
-            let content = `打卡点: ${checkpoint.name}\n`
-            
-            if (checkpointCheckins.length > 0) {
-              content += `已有 ${checkpointCheckins.length} 条打卡记录`
-            } else {
-              content += '暂无打卡记录'
-            }
-            
-            wx.showModal({
-              title: '打卡点详情',
-              content: content,
-              confirmText: checkpointCheckins.length > 0 ? '查看打卡' : '去打卡',
-              cancelText: '关闭',
-              success: (res) => {
-                if (res.confirm) {
-                  if (checkpointCheckins.length > 0) {
-                    // 从tabBar地图页面导航到活动详情并显示打卡记录
-                    wx.navigateTo({
-                      url: `/pages/activity/index?id=${this.data.activityId}&tab=checkins&checkpointId=${checkpoint.id}`
-                    })
-                  } else {
-                    // 跳转到打卡页面
-                    wx.navigateTo({
-                      url: `/pages/checkin/checkin?activityId=${this.data.activityId}`
-                    })
-                  }
-                }
-              }
-            })
-          }
-        })
-        .catch(err => {
-          console.error('获取打卡记录失败', err)
-          wx.showToast({
-            title: '获取打卡记录失败',
-            icon: 'none'
+    wx.showModal({
+      title: '打卡详情',
+      content: content,
+      confirmText: checkin.images && checkin.images.length > 0 ? '查看图片' : '关闭',
+      cancelText: '关闭',
+      success: (res) => {
+        if (res.confirm && checkin.images && checkin.images.length > 0) {
+          // 验证图片 URLs
+          const validImages = checkin.images.filter(url => {
+            return url && typeof url === 'string' && url.trim() !== ''
           })
-        })
-    } else {
-      wx.showToast({
-        title: marker.title,
-        icon: 'none'
-      })
-    }
-  },
-  
-  // 处理所有活动的打卡点点击
-  handleAllActivitiesMarkerTap: function(marker) {
-    // 查找对应的活动和打卡点
-    let activityInfo = null
-    let checkpointInfo = null
-    
-    for (const activity of this.data.activities) {
-      if (activity.id === marker.activityId && activity.checkpoints) {
-        activityInfo = activity
-        checkpointInfo = activity.checkpoints.find(cp => cp.id === marker.id)
-        if (checkpointInfo) break
-      }
-    }
-    
-    if (activityInfo && checkpointInfo) {
-      // 查询与该打卡点相关的打卡记录
-      api.getCheckins(activityInfo.id)
-        .then(res => {
-          if (res && res.data) {
-            // 筛选出属于该打卡点的打卡记录
-            const checkpointCheckins = res.data.filter(checkin => checkin.checkpointId === checkpointInfo.id)
-            
-            let content = `活动: ${activityInfo.title}\n`
-                        + `打卡点: ${checkpointInfo.name}\n`
-                        + `位置: ${activityInfo.location}\n`
-            
-            if (checkpointCheckins.length > 0) {
-              content += `已有 ${checkpointCheckins.length} 条打卡记录`
-            } else {
-              content += '暂无打卡记录'
-            }
-            
-            wx.showModal({
-              title: '打卡点详情',
-              content: content,
-              confirmText: '查看活动',
-              cancelText: '关闭',
-              success: (res) => {
-                if (res.confirm) {
-                  // 跳转到活动详情页，并带上打卡点信息
-                  wx.navigateTo({
-                    url: `/pages/activity/index?id=${activityInfo.id}&tab=checkins&checkpointId=${checkpointInfo.id}`
-                  })
-                }
-              }
+
+          if (validImages.length === 0) {
+            wx.showToast({
+              title: '没有有效的图片',
+              icon: 'none'
             })
+            return
           }
-        })
-        .catch(err => {
-          console.error('获取打卡记录失败', err)
-          // 即使获取打卡记录失败，也显示基本信息
-          const content = `活动: ${activityInfo.title}\n`
-                        + `打卡点: ${checkpointInfo.name}\n`
-                        + `位置: ${activityInfo.location}`
-          
-          wx.showModal({
-            title: '打卡点详情',
-            content: content,
-            confirmText: '查看活动',
-            cancelText: '关闭',
-            success: (res) => {
-              if (res.confirm) {
-                wx.navigateTo({
-                  url: `/pages/activityDetail/activityDetail?id=${activityInfo.id}`
-                })
-              }
+
+          // 查看打卡图片
+          wx.previewImage({
+            urls: validImages,
+            success: () => {
+              console.log('图片预览成功')
+            },
+            fail: (err) => {
+              console.error('图片预览失败:', err)
+              wx.showToast({
+                title: '图片加载失败',
+                icon: 'none'
+              })
             }
           })
-        })
-    } else {
-      wx.showToast({
-        title: marker.title,
-        icon: 'none'
-      })
-    }
+        }
+      }
+    })
   },
 
   // 地图加载完成
   mapLoaded: function() {
+    console.log('地图加载完成')
     this.mapCtx = wx.createMapContext('map')
+    console.log('创建地图上下文:', this.mapCtx)
     
     // 延迟一下，确保地图已准备好
     setTimeout(() => {
+      console.log('地图准备就绪，开始调整视野')
       // 只有在有标记点的情况下才执行includeAllMarkers
       if (this.data.markers && this.data.markers.length > 0) {
         this.includeAllMarkers()
@@ -599,6 +409,143 @@ Page({
         // 如果没有标记点但有用户位置，则移动到用户位置
         this.moveToLocation()
       }
-    }, 500)
-  }
+    }, 1000)  // 增加延迟时间到 1000ms
+  },
+
+  // 切换筛选面板显示状态
+  toggleFilterPanel: function() {
+    this.setData({
+      showFilterPanel: !this.data.showFilterPanel,
+      showSearch: false,
+      searchKeyword: ''  // 清空搜索关键词
+    })
+  },
+
+  // 活动类型改变
+  onActivityTypeChange: function(e) {
+    this.setData({
+      activityTypeIndex: e.detail.value
+    })
+  },
+
+  // 开始日期改变
+  onStartDateChange: function(e) {
+    this.setData({
+      startDate: e.detail.value
+    })
+  },
+
+  // 结束日期改变
+  onEndDateChange: function(e) {
+    this.setData({
+      endDate: e.detail.value
+    })
+  },
+
+  // 重置筛选条件
+  resetFilters: function() {
+    this.setData({
+      activityTypeIndex: 0,
+      startDate: '',
+      endDate: ''
+    })
+    this.applyFilters()
+  },
+
+  // 应用筛选条件
+  applyFilters: function() {
+    let filteredCheckins = [...this.data.originalCheckins]
+
+    // 按活动类型筛选
+    if (this.data.activityTypeIndex > 0) {
+      const selectedType = this.data.activityTypes[this.data.activityTypeIndex]
+      filteredCheckins = filteredCheckins.filter(checkin => 
+        checkin.activityType === selectedType
+      )
+    }
+
+    // 按日期范围筛选
+    if (this.data.startDate) {
+      const startTime = new Date(this.data.startDate).getTime()
+      filteredCheckins = filteredCheckins.filter(checkin => 
+        new Date(checkin.checkinTime).getTime() >= startTime
+      )
+    }
+
+    if (this.data.endDate) {
+      const endTime = new Date(this.data.endDate).getTime()
+      filteredCheckins = filteredCheckins.filter(checkin => 
+        new Date(checkin.checkinTime).getTime() <= endTime
+      )
+    }
+
+    // 更新地图标记点
+    const markers = filteredCheckins.map((checkin, index) => {
+      return {
+        id: Number(checkin.id),
+        activityId: checkin.activityId,
+        latitude: Number(checkin.latitude),
+        longitude: Number(checkin.longitude),
+        title: checkin.creator.nickname + '在【' + checkin.activity.title + '】活动' || '打卡点',
+        callout: {
+          content: checkin.creator.nickname + '在【' + checkin.activity.title + '】活动' || '打卡点',
+          color: '#000000',
+          fontSize: 14,
+          borderRadius: 4,
+          padding: 5,
+          display: 'ALWAYS'
+        },
+        label: {
+          content: (index + 1).toString(),
+          color: '#FFFFFF',
+          fontSize: 14,
+          anchorX: 0,
+          anchorY: 0,
+          textAlign: 'center'
+        },
+        anchor: {
+          x: 0.5,
+          y: 1
+        }
+      }
+    })
+
+    this.setData({
+      checkins: filteredCheckins,
+      markers,
+      showFilterPanel: false
+    }, () => {
+      // 在 setData 的回调中添加用户位置标记
+      if (this.data.userLocation) {
+        this.addUserLocationMarker()
+      }
+      
+      // 调整视野以包含所有标记点
+      this.includeAllMarkers()
+    })
+  },
+
+  // 切换搜索框显示状态
+  toggleFilterPanel: function() {
+    this.setData({
+      showSearch: !this.data.showSearch,
+      searchKeyword: ''  // 清空搜索关键词
+    })
+  },
+
+  // 搜索输入
+  onSearchInput: function(e) {
+    this.setData({
+      searchKeyword: e.detail.value
+    })
+  },
+
+  // 搜索确认
+  onSearchConfirm: function() {
+    const keyword = this.data.searchKeyword.trim()
+    this.loadCheckins(keyword)
+    this.setData({
+      showSearch: false
+    })
+  },
 }) 

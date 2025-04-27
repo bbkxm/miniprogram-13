@@ -11,7 +11,8 @@ Page({
       startTime: '',
       endTime: '',
       location: '',
-      coordinates: null,
+      longitude: null,
+      latitude: null,
       description: ''
     },
     submitting: false,
@@ -23,7 +24,7 @@ Page({
     datePickerMinutes: [],
     datePickerValue: [0, 0, 0],
     tempDatePickerValue: '',
-    categories: ['户外运动', '文化活动', '社交聚会', '教育培训', '其他']
+    categories: ['旅游', '公益', '其他']
   },
 
   onLoad: function (options) {
@@ -40,9 +41,10 @@ Page({
     // 生成日期选择器数据
     this.initDatePickerData()
     
+    // 用户显示用 HH:MM格式，数据还是保存为 HH:MM:SS 
     this.setData({
-      'formData.startTime': util.formatDate(today) + ' 08:00',
-      'formData.endTime': util.formatDate(tomorrow) + ' 18:00',
+      'formData.startTime': util.formatDateTimeForDisplay(today).replace(/:\d{2}$/, '') + ':00',
+      'formData.endTime': util.formatDateTimeForDisplay(tomorrow).replace(/:\d{2}$/, '') + ':00',
       loading: false
     })
   },
@@ -197,10 +199,8 @@ Page({
       success: (res) => {
         this.setData({
           'formData.location': res.name || res.address,
-          'formData.coordinates': {
-            latitude: res.latitude,
-            longitude: res.longitude
-          }
+          'formData.latitude': res.latitude,
+          'formData.longitude': res.longitude
         })
       }
     })
@@ -209,6 +209,121 @@ Page({
   // 输入描述
   onInputDescription: function(e) {
     this.setData({ 'formData.description': e.detail.value })
+  },
+
+  // TDesign 日期时间选择器相关函数
+  // 显示开始时间选择器
+  showStartTimePicker() {
+    // 解析当前的开始时间，转换为时间戳
+    const currentTime = this.parseTimeStringToTimestamp(this.data.formData.startTime);
+    this.setData({
+      startTimeVisible: true,
+      startTimeValue: currentTime
+    });
+  },
+
+  // 显示结束时间选择器
+  showEndTimePicker() {
+    // 解析当前的结束时间，转换为时间戳
+    const currentTime = this.parseTimeStringToTimestamp(this.data.formData.endTime);
+    this.setData({
+      endTimeVisible: true,
+      endTimeValue: currentTime
+    });
+  },
+
+  // 开始时间选择器可见性变化
+  onStartTimeVisibleChange(e) {
+    const { visible } = e.detail;
+    this.setData({
+      startTimeVisible: visible,
+    });
+  },
+
+  // 结束时间选择器可见性变化
+  onEndTimeVisibleChange(e) {
+    const { visible } = e.detail;
+    this.setData({
+      endTimeVisible: visible,
+    });
+  },
+
+  // 开始时间变化
+  onStartTimeChange(e) {
+    const { value } = e.detail;
+    this.setData({
+      startTimeValue: value,
+    });
+  },
+
+  // 结束时间变化
+  onEndTimeChange(e) {
+    const { value } = e.detail;
+    this.setData({
+      endTimeValue: value,
+    });
+  },
+
+  // 开始时间确认
+  onStartTimeConfirm(e) {
+    const { value } = e.detail;
+    // 将时间戳转换为字符串格式
+    const formattedTime = this.formatTimestampToString(value);
+    this.setData({
+      'formData.startTime': formattedTime,
+      startTimeVisible: false,
+    });
+  },
+
+  // 结束时间确认
+  onEndTimeConfirm(e) {
+    const { value } = e.detail;
+    // 将时间戳转换为字符串格式
+    const formattedTime = this.formatTimestampToString(value);
+    this.setData({
+      'formData.endTime': formattedTime,
+      endTimeVisible: false,
+    });
+  },
+
+  // 开始时间取消
+  onStartTimeCancel() {
+    this.setData({
+      startTimeVisible: false,
+    });
+  },
+
+  // 结束时间取消
+  onEndTimeCancel() {
+    this.setData({
+      endTimeVisible: false,
+    });
+  },
+
+  // 辅助函数：将时间字符串解析为时间戳
+  parseTimeStringToTimestamp(timeString) {
+    try {
+      const [datePart, timePart] = timeString.split(' ');
+      const [year, month, day] = datePart.split('-').map(Number);
+      const [hour, minute] = timePart.split(':').map(Number);
+      const date = new Date(year, month - 1, day, hour, minute);
+      return date.getTime();
+    } catch (e) {
+      // 如果解析失败，返回当前时间
+      return new Date().getTime();
+    }
+  },
+
+  // 辅助函数：将时间戳格式化为字符串
+  formatTimestampToString(timestamp) {
+    const date = new Date(timestamp);
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const hour = date.getHours().toString().padStart(2, '0');
+    const minute = date.getMinutes().toString().padStart(2, '0');
+    const second = date.getSeconds().toString().padStart(2, '0');
+    return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
   },
 
   // 重置表单
@@ -255,7 +370,7 @@ Page({
       return
     }
     
-    if (!formData.location || !formData.coordinates) {
+    if (!formData.location || !formData.longitude || !formData.latitude) {
       wx.showToast({
         title: '请选择活动地点',
         icon: 'none'
@@ -298,10 +413,21 @@ Page({
     // 先上传图片，再提交活动
     uploadCoverImage()
       .then((coverImageUrl) => {
-        const data = {
+        // 创建当前时间并使用API格式化 YYYY-MM-DD HH:MM:SS
+        const now = new Date();
+        const formattedCreatedAt = util.formatDateTimeForAPI(now);
+        
+        // 确保 startTime 和 endTime 也包含秒数部分
+        const formDataWithSeconds = {
           ...formData,
-          coverImage: coverImageUrl,
-          createdAt: new Date().toISOString()
+          // 检查是否已有秒数部分（检查时间格式是否有两个冒号）
+          startTime: formData.startTime.split(':').length > 2 ? formData.startTime : formData.startTime + ':00',
+          endTime: formData.endTime.split(':').length > 2 ? formData.endTime : formData.endTime + ':00'
+        };
+        
+        const data = {
+          ...formDataWithSeconds,
+          coverImage: coverImageUrl
         }
         
         return api.createActivity(data)
@@ -309,7 +435,7 @@ Page({
       .then(res => {
         this.setData({ submitting: false })
         
-        if (res && res.data && res.data.success) {
+        if (res && res.data) {
           wx.showToast({
             title: '发布成功',
             icon: 'success',

@@ -1,5 +1,8 @@
 {
   "navigationBarTitleText": "发布活动",
   "enablePullDownRefresh": true,
-  "usingComponents": {}
+  "usingComponents": {
+    "t-cell": "tdesign-miniprogram/cell/cell",
+    "t-date-time-picker": "tdesign-miniprogram/date-time-picker/date-time-picker"
+  }
 }
